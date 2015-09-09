@@ -1,0 +1,41 @@
+<!doctype HTML>
+
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Craig's Grade Calculator</title>
+  <link rel="stylesheet" href="/public/css/style.css">
+</head>
+<body>
+  <header>
+     <h1>CraigBook - the online gradebook </h1>
+   </header>
+  <nav>
+    <ul>
+      <li>About</li>
+      <li>placeholder text</li>
+    </ul>
+  </nav>
+  <content>
+      <form><!-- what will the action file be? -->
+        Add new student name:<input type="text" id="studentName" placeholder="enter a student name"></input></br>
+      <input id="addStudent" type="button" value="add new student">
+      </form>
+      <form> <!-- what will the action file be? -->
+         Add new assignment:<input type="text" id="assignmentName" placeholder="enter a new assignment"></input></br>
+         <input id="addAssignment" type="button" value="add a new assignment">
+      </form>
+      <table id="table">
+        <tr>
+          <th>Student Name</th>
+          <th>Overall Letter Grade</th>
+          <th id="gradePercent">Grade Percent</th>
+
+        </tr>
+      </table>
+  </content>
+<footer> &copy 2015 Craig Campbell </footer>
+  <script src="/public/js/jquery-2.1.4.min.js"></script>
+  <script src="/public/js/app.js"></script>
+</body>
+</html>

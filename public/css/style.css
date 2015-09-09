@@ -1,0 +1,13 @@
+.editable{
+  color: red;
+  border: 1px solid green;
+}
+
+.clicked{
+  color:blue;
+  border: 1px solid purple;
+}
+
+h1 {
+  color: blue;
+}
