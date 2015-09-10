@@ -30,7 +30,8 @@ addAssignment.addEventListener('click', newAssignment, false);
 
 function editCells(){
   $('.clicked').text(''); // clear the old text
-  $('<input/>').attr({ type: 'text', id: 'editing', name: 'editing'}).appendTo('.clicked'); // insert a text input box
+  $('<input>').attr({ type: 'text', id: 'editing', name: 'editing'}).appendTo('.clicked'); // insert a text input box
+  $('#editing').focus();
   $('#editing').on('blur', function(){
     $('.clicked').text($('#editing').val()); //set new table cell text
     $('.clicked').attr('class', 'editable'); //make the table cell editable again
