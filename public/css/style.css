@@ -1,5 +1,5 @@
 .editable{
-  color: red;
+  color: green;
   border: 1px solid green;
 }
 
@@ -10,4 +10,12 @@
 
 h1 {
   color: blue;
+}
+
+td, th {
+  min-width: 20px;
+}
+
+#editing{
+  color: red;
 }
