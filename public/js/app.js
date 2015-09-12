@@ -26,7 +26,9 @@ $('#addStudent').on('click', function(){
     if ($('#studentName').val() === '') { //check if text input field is empty
       console.log("nothing to add!");
     } else {
-      var newStudent = new Student($('#studentName').val());
+      var originalInput = $('#studentName').val()
+      var properCapitalization = originalInput.slice(0,1).toUpperCase() + originalInput.slice(1).toLowerCase(); //makes 1st letter capitalized, and rest lowercase regardless of input capitalization; this will be important for alphabetizing as ASCII numbers for lowercase "a" is actually HIGHER than for uppercase "Z", and my method of comparing compares ASCII values
+      var newStudent = new Student(properCapitalization);
       newStudent.renderStudent();
       alphabetizeStudents();  // alphabetize list of students (in case changes were made to student names)
       // addAllAssignments();  // make columns for all assignments created so far for the new student
@@ -82,7 +84,6 @@ function editCells(){
         console.log("assignment list is now: " + assignmentList);
       }
       $('.clicked').attr('class', 'editable assignment'); //make the table cell editable again
-      $('#editing').remove(); //remove the text input box
     } // end if assignment
 
     // for editing students
@@ -101,15 +102,14 @@ function editCells(){
         console.log("studentlist is now: " + studentList);
       }
       $('.clicked').attr('class', 'editable student'); //make the table cell editable again
-      $('#editing').remove(); //remove the text input box
-      alphabetizeStudents();  // alphabetize list of students (in case changes were made to student names)
     } // end if student
 
     else{    // editing scores needs nothing special since they CAN be duplicated
-      console.log("ELSE!!!");
-      $('.clicked').attr('class', 'editable'); //make the table cell editable again
-      $('#editing').remove(); //remove the text input box
+      console.log("SCORE!!!");
+      $('.clicked').attr('class', 'editable score'); //make the table cell editable again
     }
+    $('#editing').remove(); //remove the text input box
+    alphabetizeStudents();  // alphabetize list of students (in case changes were made to student names)
   }); // end on.blur
 }
 
@@ -130,7 +130,22 @@ function deleteAssignment(){
 // make event listener for deleteAssignment()
 
 function alphabetizeStudents(){
+console.log("alphabetizing students...")
+console.log(studentList);
+var higherAlphabet;
+var lowerAlphabet;
+// the for loop always alphabetizes because we start with one item then 2. The array is ALWAYS alphabetized before adding a new student, and becuause the student is beign added to the FRONT of the list (unshift), it always works.
 
+for (var i = 0; i < studentList.length; i++){
+  if (studentList[i+1] < studentList[i]){ //if 2 consecutive students are NOT in alphabetical order then...
+    higherAlphabet = studentList[i];  //store the higher value
+    lowerAlphabet = studentList[i+1]; //store the higher value
+    studentList[i] = lowerAlphabet;  //swap the two values
+    studentList[i+1] = higherAlphabet;
+  }
+}
+console.log("alphabetizing complete.")
+console.log(studentList);
 }
 
 // function addAllAssignments(){
