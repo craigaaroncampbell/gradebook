@@ -6,19 +6,26 @@ var assignmentList = [];
 var studentList = [];
 
 function Student(studentName){
-  this.studentName = studentName //document.getElementById('studentName').value;
+  this.studentName = studentName
   this.letterGrade = 'need method still...'
   this.percentGrade = 'need method still...'
 }
 
-Student.prototype.renderStudent = function(){
-  if (studentList.indexOf(this.studentName) === -1){ //if the student is NOT already in the list then....
-    var table = document.getElementById('table');
-    var newRow= document.createElement('tr');
-    table.appendChild(newRow);
-    newRow.innerHTML = '<td class="editable student" id=" '  + this.studentName + ' ">' + this.studentName + '</td> <td class="letterGrade">' + this.letterGrade + '</td> <td class="percentGrade">' + this.percentGrade + '</td>';
-    studentList.unshift(this.studentName);
-    console.log(studentList);
+
+Student.prototype.addStudent = function(){
+  if (studentList.indexOf(this) === -1){ //if the student is NOT already in the list then...
+    studentList.unshift(this);
+    console.log(studentList)
+  }
+}
+
+function renderStudents(){
+  $('td').remove()
+  for (var i =0; i < studentList.length; i++){
+  var table = document.getElementById('table');
+  var newRow = document.createElement('tr');
+  table.appendChild(newRow);
+  newRow.innerHTML = '<td class="editable student" id=" '  + studentList[i].studentName + ' ">' + studentList[i].studentName + '</td> <td class="letterGrade">' + "gotta fix this" + '</td> <td class="percentGrade">' + "gotta fix this" + '</td>';
   }
 }
 
@@ -29,8 +36,9 @@ $('#addStudent').on('click', function(){
       var originalInput = $('#studentName').val()
       var properCapitalization = originalInput.slice(0,1).toUpperCase() + originalInput.slice(1).toLowerCase(); //makes 1st letter capitalized, and rest lowercase regardless of input capitalization; this will be important for alphabetizing as ASCII numbers for lowercase "a" is actually HIGHER than for uppercase "Z", and my method of comparing compares ASCII values
       var newStudent = new Student(properCapitalization);
-      newStudent.renderStudent();
-      alphabetizeStudents();  // alphabetize list of students (in case changes were made to student names)
+      newStudent.addStudent();
+      alphabetizeStudents();// alphabetize list of students (in case changes were made to student names)
+      renderStudents();
       // addAllAssignments();  // make columns for all assignments created so far for the new student
    }
 });
@@ -131,22 +139,27 @@ function deleteAssignment(){
 
 function alphabetizeStudents(){
 console.log("alphabetizing students...")
-console.log(studentList);
 var higherAlphabet;
 var lowerAlphabet;
 // the for loop always alphabetizes because we start with one item then 2. The array is ALWAYS alphabetized before adding a new student, and becuause the student is beign added to the FRONT of the list (unshift), it always works.
 
-for (var i = 0; i < studentList.length; i++){
-  if (studentList[i+1] < studentList[i]){ //if 2 consecutive students are NOT in alphabetical order then...
-    higherAlphabet = studentList[i];  //store the higher value
-    lowerAlphabet = studentList[i+1]; //store the higher value
-    studentList[i] = lowerAlphabet;  //swap the two values
-    studentList[i+1] = higherAlphabet;
+  for (var i = 0; i < studentList.length; i++){
+    if (studentList[i] === studentList[studentList.length-1]){
+      console.log("last one");
+    }
+    else {
+      if (studentList[i+1].studentName < studentList[i].studentName){ //if 2 consecutive students are NOT in alphabetical order then...
+        higherAlphabet = studentList[i].studentName;  //store the higher value
+        lowerAlphabet = studentList[i+1].studentName; //store the higher value
+        studentList[i].studentName = lowerAlphabet;  //swap the two values
+        studentList[i+1].studentName = higherAlphabet;
+        console.log("ok")
+      }
+    }
+    console.log(studentList[i].studentName)
   }
-}
-console.log("alphabetizing complete.")
-console.log(studentList);
-}
+  console.log(studentList)
+}//end alphabetizeStudents()
 
 // function addAllAssignments(){
 //   assignmentList.forEach(function(current, index, array){
