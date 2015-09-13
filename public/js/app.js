@@ -17,10 +17,12 @@ Student.prototype.addStudent = function(){
     studentList.unshift(this);
     console.log(studentList)
   }
+  else{console.log("else")}
 }
 
 function renderStudents(){
-  $('td').remove()
+  $('tr').find('.student').parent().remove(); //this will remove ALL tr with student class.
+  //******** need to figure out how to use multiple classes for students on edit mode so scores dont delete every time I refresh the list
   for (var i =0; i < studentList.length; i++){
   var table = document.getElementById('table');
   var newRow = document.createElement('tr');
@@ -32,7 +34,8 @@ function renderStudents(){
 $('#addStudent').on('click', function(){
     if ($('#studentName').val() === '') { //check if text input field is empty
       console.log("nothing to add!");
-    } else {
+    }
+    else {
       var originalInput = $('#studentName').val()
       var properCapitalization = originalInput.slice(0,1).toUpperCase() + originalInput.slice(1).toLowerCase(); //makes 1st letter capitalized, and rest lowercase regardless of input capitalization; this will be important for alphabetizing as ASCII numbers for lowercase "a" is actually HIGHER than for uppercase "Z", and my method of comparing compares ASCII values
       var newStudent = new Student(properCapitalization);
@@ -47,21 +50,34 @@ function Assignment(assignmentName){
   this.assignmentName = assignmentName;
 }
 
-Assignment.prototype.renderAssignment = function(assignmentName){
-  if (assignmentList.indexOf(assignmentName) === -1){ //if the assignment is NOT already in the list then....
-    $('#gradePercent').after('<th class="editable" id=' + assignmentName +'>' + assignmentName + '</th>'); //put put new table header  with assignemnt name after the  grade percent column (newest assignment to the left, older ones pushed to the right)
-    $('.percentGrade').after('<td class="editable"></td>'); //new table data cells for EVERY student row
-    assignmentList.unshift(assignmentName); //put new assignment name in the front of assignmentList array  (reverse order because the assignment cells will show most recent to the left and oldest to the right)
+Assignment.prototype.addAssignment = function(assignmentName){
+  if (assignmentList.indexOf(this) === -1){ //if the assignment is NOT already in the list then....
+    assignmentList.unshift(this); //put new assignment name in the front of assignmentList array  (reverse order because the assignment cells will show most recent to the left and oldest to the right)
   }
+  else {console.log('was in already... doin nothign')}
   console.log(assignmentList)
 }
+
+function renderAssignments(){
+  $('.assignment').remove();
+  for (var i = 0; i < assignmentList.length; i++){
+    $('#gradePercent').after('<th class="editable assignment" id=' + assignmentList[i].assignmentName +'>' + assignmentList[i].assignmentName + '</th>'); //put put new table header  with assignemnt name after the  grade percent column (newest assignment to the left, older ones pushed to the right)
+    $('.percentGrade').after('<td class="editable"></td>'); //new table data cells for EVERY student row
+  }
+}
+
+
 
 $('#addAssignment').on('click', function(){
   if ($('#assignmentName').val() === '') { //check if there is text in the input field
   console.log("nothing to add!")
-} else {
-    var newAssignment = new Assignment($('#assignmentName').val())
-    newAssignment.renderAssignment($('#assignmentName').val());
+  }
+  else {
+    var originalInput = $('#assignmentName').val()
+    var properCapitalization = originalInput.slice(0,1).toUpperCase() + originalInput.slice(1).toLowerCase(); //makes 1st letter capitalized, and rest lowercase regardless of input capitalization; this will be important for alphabetizing as ASCII numbers for lowercase "a" is actually HIGHER than for uppercase "Z", and my method of comparing compares ASCII values
+    var newAssignment = new Assignment(properCapitalization);
+    newAssignment.addAssignment();
+    renderAssignments();
   }
 });
 
@@ -126,39 +142,84 @@ $('table').on('click', '.editable',  function(){
   editCells();
 }); // if the cell has class 'editable', then change the class to 'clicked' and edit the cell
 
-function deleteStudent(){
-
+function deleteStudent(studentName){
+  var found = false;
+  studentList.forEach(function(current, index, array){
+    if (current.studentName === studentName) {
+      console.log("it was in the list already. Let's delete it!");
+      studentList.splice(current, 1);
+      found = true;
+      }
+  })
+  if (found === false){
+    console.log("couldn't find it, so I can't delete it!")
+  }
 }
 
-//make event listener for delete student().... INCLUDE alphabetizeStudents() as last part of callback
+$('#deleteStudent').on('click', function(){
+  if ($('#deleteStudentName').val() === '') { //check if there is text in the input field
+  console.log("nothing to delete!");
+  }
+  else {
+  var originalInput = $('#deleteStudentName').val()
+  var properCapitalization = originalInput.slice(0,1).toUpperCase() + originalInput.slice(1).toLowerCase();
+   deleteStudent(properCapitalization); // search assignmentList for the object and remove it.
+   renderStudents();
+  }
+});
 
-function deleteAssignment(){
 
-}
-// make event listener for deleteAssignment()
 
-function alphabetizeStudents(){
-console.log("alphabetizing students...")
-var higherAlphabet;
-var lowerAlphabet;
-// the for loop always alphabetizes because we start with one item then 2. The array is ALWAYS alphabetized before adding a new student, and becuause the student is beign added to the FRONT of the list (unshift), it always works.
-
-  for (var i = 0; i < studentList.length; i++){
-    if (studentList[i] === studentList[studentList.length-1]){
-      console.log("last one");
+function deleteAssignment(assignmentName){
+  console.log(assignmentList)
+  var found = false;
+  assignmentList.forEach(function(current, index, array){
+    if (current.assignmentName === assignmentName) {
+      console.log("it was in the list already. Let's delete it!");
+      console.log(assignmentList)
+      var spliced = assignmentList.splice(current, 1);
+      found = true;
+      console.log(spliced)
     }
     else {
-      if (studentList[i+1].studentName < studentList[i].studentName){ //if 2 consecutive students are NOT in alphabetical order then...
-        higherAlphabet = studentList[i].studentName;  //store the higher value
-        lowerAlphabet = studentList[i+1].studentName; //store the higher value
-        studentList[i].studentName = lowerAlphabet;  //swap the two values
-        studentList[i+1].studentName = higherAlphabet;
-        console.log("ok")
-      }
-    }
-    console.log(studentList[i].studentName)
+      console.log("false")
+      found = false}
+  })
+  if (found === false){
+    console.log("couldn't find it, so I can't delete it!")
   }
-  console.log(studentList)
+}
+
+
+$('#deleteAssignment').on('click', function(){
+  if ($('#deleteAssignmentName').val() === '') { //check if there is text in the input field
+  console.log("nothing to delete!");
+} else {
+  var originalInput = $('#deleteAssignmentName').val()
+  var properCapitalization = originalInput.slice(0,1).toUpperCase() + originalInput.slice(1).toLowerCase();
+  console.log("deleting: " + properCapitalization)
+   deleteAssignment(properCapitalization); // search assignmentList for the object and remove it.
+   renderAssignments();
+  }
+});
+
+
+function alphabetizeStudents(){
+/*
+the for loop always alphabetizes because we start with one item then 2. The array is ALWAYS alphabetized before adding a new student, and becuause the student is beign added to the FRONT of the list (unshift), it always works.
+******
+Otherwise this would need a while loop to keep iterating over and over until it is order. Then a check to see if any changes were made on the last iteration. If not, end the loop.
+*/
+var higherAlphabet; //declared in the lexical scope of this function so it cannot be tampered with accidentally (as it could if it was in the global scope) and mess up the  alphabetizing
+var lowerAlphabet;
+  for (var i = 0; i < studentList.length - 1 ; i++){ // length-1 becasue we do the last comparison on the next-to-last index
+    if (studentList[i+1].studentName < studentList[i].studentName){ //if 2 consecutive students are NOT in alphabetical order then...
+      higherAlphabet = studentList[i].studentName;  //store the higher value
+      lowerAlphabet = studentList[i+1].studentName; //store the higher value
+      studentList[i].studentName = lowerAlphabet;  //swap the two values
+      studentList[i+1].studentName = higherAlphabet;
+    }
+  }
 }//end alphabetizeStudents()
 
 // function addAllAssignments(){
