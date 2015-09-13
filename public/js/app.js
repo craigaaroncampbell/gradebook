@@ -9,9 +9,8 @@ var totalPointsPossible = 0; //need method to get points from each assignment ad
 function Student(studentName){
   this.studentName = studentName;
   this.totalScore = "need a method to add up all pts from assignments"
-  this.
-  this.letterGrade = 'need method still...'
-  this.percentGrade = 'need method still...'
+  this.letterGrade = 'need method still...' // if this.percentGrade < xxx && < yyy... use SWITCH? case:  or if  if else   else?
+  this.percentGrade = ((this.totalScore / totalPointsPossible) * 100) // display this using.toString() + "%" but keep it as a number here for  getting letter grade
   this.assignments = assignmentList;
 }
 
