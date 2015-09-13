@@ -4,11 +4,15 @@ console.log('app.js file is being read');
 
 var assignmentList = [];
 var studentList = [];
+var totalPointsPossible = 0; //need method to get points from each assignment added (property of the assignment objects) and add them all up
 
 function Student(studentName){
-  this.studentName = studentName
+  this.studentName = studentName;
+  this.totalScore = "need a method to add up all pts from assignments"
+  this.
   this.letterGrade = 'need method still...'
   this.percentGrade = 'need method still...'
+  this.assignments = assignmentList;
 }
 
 
