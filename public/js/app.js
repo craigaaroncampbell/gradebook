@@ -4,14 +4,22 @@ console.log('app.js file is being read');
 
 var assignmentList = [];
 var studentList = [];
-var totalPointsPossible = 10; //need method to get points from each assignment added (property of the assignment objects) and add them all up
+var totalPointsPossible = 0; // start at zero, increase when assignments added
+var pointsToAdd = 0;
 
 function Student(studentName){
   this.studentName = studentName;
-  this.totalScore = 9
-  this.percentGrade = ((this.totalScore / totalPointsPossible) * 100) // display this using.toString() + "%" but keep it as a number here for  getting letter grade
-  this.assignments = assignmentList;
+  this.totalScore = 0;
 }
+
+Student.prototype.getTotalScore = function(){
+   this.totalScore += pointsToAdd;
+}
+
+Student.prototype.getPercentScore = function(){
+ this.percentGrade = ((this.totalScore / totalPointsPossible) * 100) // display this using.toString() + "%" but keep it as a number here for  getting letter grade
+}
+
 
 Student.prototype.getLetterGrade = function() {
   if (this.percentGrade >= 90){this.letterGrade = "A";}
@@ -38,8 +46,10 @@ function renderStudents(){
   var table = document.getElementById('table');
   var newRow = document.createElement('tr');
   table.appendChild(newRow);
+  studentList[i].getTotalScore();
+  studentList[i].getPercentScore();
   studentList[i].getLetterGrade();
-  newRow.innerHTML = '<td class="editable student" id=" '  + studentList[i].studentName + ' ">' + studentList[i].studentName + '</td> <td class="letterGrade">' + studentList[i].letterGrade + '</td> <td class="percentGrade">' + studentList[i].percentGrade+ '</td>';
+  newRow.innerHTML = '<td class="editable student" id="'  + studentList[i].studentName + '">' + studentList[i].studentName + '</td> <td class="letterGrade">' + studentList[i].letterGrade + '</td> <td class="percentGrade">' + studentList[i].percentGrade+ '</td>';
   }
 }
 
@@ -54,27 +64,32 @@ $('#addStudent').on('click', function(){
       newStudent.addStudent();
       alphabetizeStudents();// alphabetize list of students (in case changes were made to student names)
       renderStudents();
-      // addAllAssignments();  // make columns for all assignments created so far for the new student
+      renderAssignments();
+
    }
 });
 
-function Assignment(assignmentName){
+function Assignment(assignmentName, points){
   this.assignmentName = assignmentName;
+  this.points = points;
 }
+
 
 Assignment.prototype.addAssignment = function(assignmentName){
   if (assignmentList.indexOf(this) === -1){ //if the assignment is NOT already in the list then....
     assignmentList.unshift(this); //put new assignment name in the front of assignmentList array  (reverse order because the assignment cells will show most recent to the left and oldest to the right)
+    totalPointsPossible += this.points;
   }
-  else {console.log('was in already... doin nothign')}
+  else {console.log('was in already... doin nothing')}
   console.log(assignmentList)
 }
 
 function renderAssignments(){
   $('.assignment').remove();
   for (var i = 0; i < assignmentList.length; i++){
-    $('#gradePercent').after('<th class="editable assignment" id=' + assignmentList[i].assignmentName +'>' + assignmentList[i].assignmentName + '</th>'); //put put new table header  with assignemnt name after the  grade percent column (newest assignment to the left, older ones pushed to the right)
-    $('.percentGrade').after('<td class="editable"></td>'); //new table data cells for EVERY student row
+    $('#gradePercent').after('<th class="editable assignment" id=' + assignmentList[i].assignmentName +'>' + assignmentList[i].assignmentName + '<br>' + assignmentList[i].points +' pts</th>'); //put put new table header  with assignemnt name after the  grade percent column (newest assignment to the left, older ones pushed to the right)
+    $('.percentGrade').after('<td class="editable score"></td>'); //new table data cells for EVERY student row
+
   }
 }
 
@@ -87,8 +102,10 @@ $('#addAssignment').on('click', function(){
   else {
     var originalInput = $('#assignmentName').val()
     var properCapitalization = originalInput.slice(0,1).toUpperCase() + originalInput.slice(1).toLowerCase(); //makes 1st letter capitalized, and rest lowercase regardless of input capitalization; this will be important for alphabetizing as ASCII numbers for lowercase "a" is actually HIGHER than for uppercase "Z", and my method of comparing compares ASCII values
-    var newAssignment = new Assignment(properCapitalization);
+    var pointValue = Number($('#pointValue').val());
+    var newAssignment = new Assignment(properCapitalization, pointValue);
     newAssignment.addAssignment();
+    renderStudents();
     renderAssignments();
   }
 });
@@ -106,7 +123,7 @@ function editCells(){
     $('.clicked').text(editValue); //set new table cell text
 
     //for editing assignments:
-    if ($('.clicked').is($('th'))) {   // if cell is th (i.e. assignment)
+    if ($('.clicked').is($('.assignment'))) {   // if cell is th (i.e. assignment)
       console.log("ASSIGNMENT!!!");
       $('.clicked').attr('id', editValue); // set id to the edited value
 
@@ -123,7 +140,7 @@ function editCells(){
     } // end if assignment
 
     // for editing students
-    else if ($('.clicked').is($('td[id]'))) {   // if cell is td with id (i.e. student)
+    else if ($('.clicked').is($('.student'))) {   // if cell is td with id (i.e. student)
       console.log('STUDENT!!!!');
 
       $('.clicked').attr('id', editValue); // set id to the edited value
@@ -140,19 +157,43 @@ function editCells(){
       $('.clicked').attr('class', 'editable student'); //make the table cell editable again
     } // end if student
 
-    else{    // editing scores needs nothing special since they CAN be duplicated
+    else if ($('.clicked').is($('.score'))) {   // editing scores needs nothing special since they CAN be duplicated
       console.log("SCORE!!!");
+      $('clicked').attr('id', $(this).siblings(':first').attr('id') + "OkNowINeedToGetAtTheAssignmentName")
       $('.clicked').attr('class', 'editable score'); //make the table cell editable again
+      pointsToAdd += Number($(this).val());
+
     }
     $('#editing').remove(); //remove the text input box
     alphabetizeStudents();  // alphabetize list of students (in case changes were made to student names)
   }); // end on.blur
 }
 
+
+
 $('table').on('click', '.editable',  function(){
-  $(this).attr('class', 'clicked');
+  var storedName = $(this).siblings(':first').attr('id');
+  console.log("stored name: " + storedName)
+  $(this).addClass('clicked');
+  if ($(this).is('.score')) {
+  $(this).attr('id', $(this).siblings(':first').attr('id') + "OkNowINeedToGetAtTheAssignmentName")
+  }
+  pointsToAdd = 0; //number of points to add to student score. resets each time to zero so the value will always be what is entered in in the score box when clicked
   editCells();
+  setTimeout(waiting, 3000)
+  function waiting(){
+    studentList.forEach(function(current, index, array){
+      if (current.studentName === storedName) {
+        current.getTotalScore();
+        current.getPercentScore();
+        current.getLetterGrade();
+        console.log(studentList[index])
+        renderStudents();
+      }
+    })
+  }
 }); // if the cell has class 'editable', then change the class to 'clicked' and edit the cell
+
 
 function deleteStudent(studentName){
   var found = false;
