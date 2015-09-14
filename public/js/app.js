@@ -1,7 +1,7 @@
 'use strict';
 
 console.log('app.js file is being read');
-
+var formerValue;
 var assignmentList = [];
 var studentList = [];
 var totalPointsPossible = 0; // start at zero, increase when assignments added
@@ -19,7 +19,7 @@ Student.prototype.getTotalScore = function(){
 }
 
 Student.prototype.removePoints = function(){
-   if (pointsToRemove){
+   if (pointsToRemove !== NaN){
     this.totalScore -= pointsToRemove;
   }
 }
@@ -125,7 +125,7 @@ $('#addAssignment').on('click', function(){
 
 
 function editCells(){
-  var formerValue = $('.clicked').text();// store the original value before clearing the cell
+  formerValue = $('.clicked').text();// store the original value before clearing the cell
   console.log("the value used  to be: " + formerValue);
   $('.clicked').text(''); // clear the old text
   $('<input>').attr({ type: 'text', id: 'editing'}).appendTo('.clicked'); // insert a text input box
@@ -172,9 +172,10 @@ function editCells(){
 
     else if ($('.clicked').is($('.score'))) {   // editing scores needs nothing special since they CAN be duplicated
       console.log("SCORE!!!");
-      $('clicked').attr('id', $(this).siblings(':first').attr('id') + "OkNowINeedToGetAtTheAssignmentName")
       $('.clicked').attr('class', 'editable score'); //make the table cell editable again
       pointsToAdd += Number($(this).val());
+      pointsToDisplay = pointsToAdd;
+      console.log("points to dispalay", pointsToDisplay)
     }
     $('#editing').remove(); //remove the text input box
     alphabetizeStudents();  // alphabetize list of students (in case changes were made to student names)
@@ -189,10 +190,10 @@ $('table').on('click', '.editable',  function(){
   console.log("points to remove: " + pointsToRemove)
   console.log("stored name: " + storedName)
   $(this).addClass('clicked');
-  if ($(this).is('.score')) {
-  $(this).attr('id', $(this).siblings(':first').attr('id') + "OkNowINeedToGetAtTheAssignmentName")
-
-  }
+  // if ($(this).is('.score')) {
+  //   pointsToDisplay = Number($(this).text());
+  // }
+  // console.log("points to display:", pointsToDisplay)
   pointsToAdd = 0; //number of points to add to student score. resets each time to zero so the value will always be what is entered in in the score box when clicked
   editCells();
   setTimeout(waiting, 4000)
@@ -202,6 +203,7 @@ $('table').on('click', '.editable',  function(){
         current.removePoints();
         renderStudents();
         console.log(studentList[index])
+        renderAssignments();
 
       }
     })
