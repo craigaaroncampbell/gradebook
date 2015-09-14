@@ -6,6 +6,8 @@ var assignmentList = [];
 var studentList = [];
 var totalPointsPossible = 0; // start at zero, increase when assignments added
 var pointsToAdd = 0;
+var pointsToRemove = 0;
+var pointsToDisplay = 0;
 
 function Student(studentName){
   this.studentName = studentName;
@@ -14,6 +16,12 @@ function Student(studentName){
 
 Student.prototype.getTotalScore = function(){
    this.totalScore += pointsToAdd;
+}
+
+Student.prototype.removePoints = function(){
+   if (pointsToRemove){
+    this.totalScore -= pointsToRemove;
+  }
 }
 
 Student.prototype.getPercentScore = function(){
@@ -49,7 +57,7 @@ function renderStudents(){
   studentList[i].getTotalScore();
   studentList[i].getPercentScore();
   studentList[i].getLetterGrade();
-  newRow.innerHTML = '<td class="editable student" id="'  + studentList[i].studentName + '">' + studentList[i].studentName + '</td> <td class="letterGrade">' + studentList[i].letterGrade + '</td> <td class="percentGrade">' + studentList[i].percentGrade+ '</td>';
+  newRow.innerHTML = '<td class="editable student" id="'  + studentList[i].studentName + '">' + studentList[i].studentName + '</td> <td id="letterGrade' + studentList[i].studentName+'">' + studentList[i].letterGrade + '</td> <td id="percentGrade'+ studentList[i].studentName +'">' + studentList[i].percentGrade+ '</td>';
   }
 }
 
@@ -85,11 +93,16 @@ Assignment.prototype.addAssignment = function(assignmentName){
 }
 
 function renderAssignments(){
+  var id;
   $('.assignment').remove();
   for (var i = 0; i < assignmentList.length; i++){
-    $('#gradePercent').after('<th class="editable assignment" id=' + assignmentList[i].assignmentName +'>' + assignmentList[i].assignmentName + '<br>' + assignmentList[i].points +' pts</th>'); //put put new table header  with assignemnt name after the  grade percent column (newest assignment to the left, older ones pushed to the right)
-    $('.percentGrade').after('<td class="editable score"></td>'); //new table data cells for EVERY student row
+    for (var j = 0; j < studentList.length; j++) {
+     var nameOfStudent = studentList[j].studentName
+      id = nameOfStudent + assignmentList[i].assignmentName
+      $('#percentGrade' + nameOfStudent).after('<td class="editable score" id="'+ id + '">' + pointsToDisplay +  '</td>'); // render assignment score box with unique id for student/assignment combo
+    }
 
+    $('#gradePercent').after('<th class="editable assignment" id=' + assignmentList[i].assignmentName +'>' + assignmentList[i].assignmentName + '<br>' + assignmentList[i].points +' pts</th>'); //put put new table header  with assignemnt name after the  grade percent column (newest assignment to the left, older ones pushed to the right)
   }
 }
 
@@ -162,7 +175,6 @@ function editCells(){
       $('clicked').attr('id', $(this).siblings(':first').attr('id') + "OkNowINeedToGetAtTheAssignmentName")
       $('.clicked').attr('class', 'editable score'); //make the table cell editable again
       pointsToAdd += Number($(this).val());
-
     }
     $('#editing').remove(); //remove the text input box
     alphabetizeStudents();  // alphabetize list of students (in case changes were made to student names)
@@ -173,22 +185,24 @@ function editCells(){
 
 $('table').on('click', '.editable',  function(){
   var storedName = $(this).siblings(':first').attr('id');
+  pointsToRemove  = Number($(this).text());  //subract off the points in the cell FIRST so the score can be lowered to a new value if needed. otherwise it just gets bigger every time
+  console.log("points to remove: " + pointsToRemove)
   console.log("stored name: " + storedName)
   $(this).addClass('clicked');
   if ($(this).is('.score')) {
   $(this).attr('id', $(this).siblings(':first').attr('id') + "OkNowINeedToGetAtTheAssignmentName")
+
   }
   pointsToAdd = 0; //number of points to add to student score. resets each time to zero so the value will always be what is entered in in the score box when clicked
   editCells();
-  setTimeout(waiting, 3000)
+  setTimeout(waiting, 4000)
   function waiting(){
     studentList.forEach(function(current, index, array){
       if (current.studentName === storedName) {
-        current.getTotalScore();
-        current.getPercentScore();
-        current.getLetterGrade();
-        console.log(studentList[index])
+        current.removePoints();
         renderStudents();
+        console.log(studentList[index])
+
       }
     })
   }
