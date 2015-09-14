@@ -4,16 +4,24 @@ console.log('app.js file is being read');
 
 var assignmentList = [];
 var studentList = [];
-var totalPointsPossible = 0; //need method to get points from each assignment added (property of the assignment objects) and add them all up
+var totalPointsPossible = 10; //need method to get points from each assignment added (property of the assignment objects) and add them all up
 
 function Student(studentName){
   this.studentName = studentName;
-  this.totalScore = "need a method to add up all pts from assignments"
-  this.letterGrade = 'need method still...' // if this.percentGrade < xxx && < yyy... use SWITCH? case:  or if  if else   else?
+  this.totalScore = 9
   this.percentGrade = ((this.totalScore / totalPointsPossible) * 100) // display this using.toString() + "%" but keep it as a number here for  getting letter grade
   this.assignments = assignmentList;
 }
 
+Student.prototype.getLetterGrade = function() {
+  if (this.percentGrade >= 90){this.letterGrade = "A";}
+  else if (this.percentGrade >= 80){this.letterGrade = "B";}
+  else if (this.percentGrade >= 70){this.letterGrade = "C";}
+  else if (this.percentGrade >= 60){this.letterGrade = "D";}
+  else if (this.percentGrade < 60){this.letterGrade = "F";}
+  else {this.letterGrade = "Houston, we have a problem.";}
+
+}
 
 Student.prototype.addStudent = function(){
   if (studentList.indexOf(this) === -1){ //if the student is NOT already in the list then...
@@ -30,7 +38,8 @@ function renderStudents(){
   var table = document.getElementById('table');
   var newRow = document.createElement('tr');
   table.appendChild(newRow);
-  newRow.innerHTML = '<td class="editable student" id=" '  + studentList[i].studentName + ' ">' + studentList[i].studentName + '</td> <td class="letterGrade">' + "gotta fix this" + '</td> <td class="percentGrade">' + "gotta fix this" + '</td>';
+  studentList[i].getLetterGrade();
+  newRow.innerHTML = '<td class="editable student" id=" '  + studentList[i].studentName + ' ">' + studentList[i].studentName + '</td> <td class="letterGrade">' + studentList[i].letterGrade + '</td> <td class="percentGrade">' + studentList[i].percentGrade+ '</td>';
   }
 }
 
