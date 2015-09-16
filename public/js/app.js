@@ -8,6 +8,7 @@ var totalPointsPossible = 0; // start at zero, increase when assignments added
 var pointsToAdd = 0;
 var pointsToRemove = 0;
 var pointsToDisplay = 0;
+var storedName;
 
 function Student(studentName){
   this.studentName = studentName;
@@ -40,16 +41,29 @@ Student.prototype.getLetterGrade = function() {
 }
 
 Student.prototype.addStudent = function(){
-  if (studentList.indexOf(this) === -1){ //if the student is NOT already in the list then...
+  if (studentList[0] === undefined){ //if list is empty
     studentList.unshift(this);
     console.log(studentList)
   }
-  else{console.log("else")}
+  else { // otherwise the list has students. do the following:
+    var storedStudentName = this.studentName;
+    var storedStudentObject = this;
+    var studentMatchCounter = 0;
+    studentList.forEach(function(current, index, array){
+      if (current.studentName === storedStudentName) { //if student is already in list then increase studentMatchCounter. otherwise do nothing.
+        console.log("we got a match");
+        studentMatchCounter ++;
+      }
+    }) // end forEach
+    if (studentMatchCounter === 0) {// studentMatchCounter is still zero (student not in list) then add student to list
+    studentList.unshift(storedStudentObject);
+    console.log(studentList);
+      }
+  }
 }
 
 function renderStudents(){
-  $('tr').find('.student').parent().remove(); //this will remove ALL tr with student class.
-  //******** need to figure out how to use multiple classes for students on edit mode so scores dont delete every time I refresh the list
+  $('tr').find('.student').parent().remove(); //this will remove ALL tr with student class children
   for (var i =0; i < studentList.length; i++){
   var table = document.getElementById('table');
   var newRow = document.createElement('tr');
@@ -66,13 +80,20 @@ $('#addStudent').on('click', function(){
       console.log("nothing to add!");
     }
     else {
-      var originalInput = $('#studentName').val()
+      var originalInput = $('#studentName').val() //value of the input field text
       var properCapitalization = originalInput.slice(0,1).toUpperCase() + originalInput.slice(1).toLowerCase(); //makes 1st letter capitalized, and rest lowercase regardless of input capitalization; this will be important for alphabetizing as ASCII numbers for lowercase "a" is actually HIGHER than for uppercase "Z", and my method of comparing compares ASCII values
+
+      // if (studentList[0].studentName === properCapitalization) { //if the proper capitalization is NOT found studentList
       var newStudent = new Student(properCapitalization);
       newStudent.addStudent();
+      // console.log(studentList[0].studentName)
       alphabetizeStudents();// alphabetize list of students (in case changes were made to student names)
       renderStudents();
       renderAssignments();
+      // }
+      // else {
+        // console.log("That student already exists! No, you CAN'T make a clone!")
+      // }
 
    }
 });
@@ -95,14 +116,14 @@ Assignment.prototype.addAssignment = function(assignmentName){
 function renderAssignments(){
   var id;
   $('.assignment').remove();
-  for (var i = 0; i < assignmentList.length; i++){
-    for (var j = 0; j < studentList.length; j++) {
+  for (var i = 0; i < assignmentList.length; i++){ // go through assingment list
+    for (var j = 0; j < studentList.length; j++) { // for EACH assignment, go through student list and make a new TD with student-assignment id
      var nameOfStudent = studentList[j].studentName
       id = nameOfStudent + assignmentList[i].assignmentName
       $('#percentGrade' + nameOfStudent).after('<td class="editable score" id="'+ id + '">' + pointsToDisplay +  '</td>'); // render assignment score box with unique id for student/assignment combo
     }
 
-    $('#gradePercent').after('<th class="editable assignment" id=' + assignmentList[i].assignmentName +'>' + assignmentList[i].assignmentName + '<br>' + assignmentList[i].points +' pts</th>'); //put put new table header  with assignemnt name after the  grade percent column (newest assignment to the left, older ones pushed to the right)
+    $('#gradePercent').after('<th class="editable assignment" id=' + assignmentList[i].assignmentName +'>' + assignmentList[i].assignmentName + '<br><table><tr><td>' + assignmentList[i].points +' pts</td></tr></table></th>'); //put put new table header  with assignemnt name after the  grade percent column (newest assignment to the left, older ones pushed to the right)
   }
 }
 
@@ -124,9 +145,9 @@ $('#addAssignment').on('click', function(){
 });
 
 
-function editCells(){
-  formerValue = $('.clicked').text();// store the original value before clearing the cell
-  console.log("the value used  to be: " + formerValue);
+function editCells(formerText){
+  var notFound = true;  // used for seing if students have been duplicated
+  console.log("formerValue: " + formerText);
   $('.clicked').text(''); // clear the old text
   $('<input>').attr({ type: 'text', id: 'editing'}).appendTo('.clicked'); // insert a text input box
   $('#editing').focus(); //put focus on the new text input box
@@ -136,35 +157,47 @@ function editCells(){
     $('.clicked').text(editValue); //set new table cell text
 
     //for editing assignments:
-    if ($('.clicked').is($('.assignment'))) {   // if cell is th (i.e. assignment)
+    if ($('.clicked').is($('.assignment'))) {   // if cell is assignment class f)
       console.log("ASSIGNMENT!!!");
       $('.clicked').attr('id', editValue); // set id to the edited value
 
       if (assignmentList.indexOf(editValue) !== -1){ //if this new edited value   WAS already in the assignment list then don't change anything! make it its original value. no duplicates!
         console.log("that was already in the list! So we're not changing anything!")
         $('.clicked').text(formerValue);  // keep the text the same as it was before
-        $('.clicked').attr('id', formerValue); //keep id same as before
+        $('.clicked').attr('id', formerText); //keep id same as before
       }
       else {  // if it was NOT already there, then change the assignment name and list
-        assignmentList[assignmentList.indexOf(formerValue)] = editValue//then replace that index value with the new ones
+        assignmentList[assignmentList.indexOf(formerText)] = editValue//then replace that index value with the new ones
         console.log("assignment list is now: " + assignmentList);
       }
       $('.clicked').attr('class', 'editable assignment'); //make the table cell editable again
     } // end if assignment
 
     // for editing students
-    else if ($('.clicked').is($('.student'))) {   // if cell is td with id (i.e. student)
+    else if ($('.clicked').is($('.student'))) {   // if cell is student class)
       console.log('STUDENT!!!!');
 
       $('.clicked').attr('id', editValue); // set id to the edited value
 
-      if (studentList.indexOf(editValue) !== -1){ //if this new edited value   WAS already in the student list then don't change anything! make it its original value. no duplicates!
-        console.log("that was already in the list! So we're not changing anything!")
-        $('.clicked').text(formerValue);  // keep the text the same as it was before
-        $('.clicked').attr('id', formerValue); //keep id same as before
-      }
-      else {  // if it was NOT already there, then change the assignment name and list
-        studentList[studentList.indexOf(formerValue)] = editValue//then replace that index value with the new ones
+      studentList.forEach(function(current, index, array){
+        if (current.studentName === editValue){ //if this new edited value   WAS already in the student list then don't change anything! make it its original value. no duplicates!
+          console.log("that was already in the list! So we're not changing anything!")
+          $('.clicked').text(formerText);  // keep the text the same as it was before
+          $('.clicked').attr('id', formerText); //keep id same as before
+          notFound = false;
+        }
+      }) //end forEach
+
+      if (notFound === true) {
+        console.log("ok new name!")
+        // if it was NOT already there, then change the student name and list by CHANGING the studentName on that object that USED TO match the clicked cell's name
+        studentList.forEach(function(current, index, array){
+          if (current.studentName === formerText) { // find the student name that matches the old text of the clicked cell
+            studentList[index].studentName = editValue; //change the matching student name to the edit value
+          }
+        }) // end forEach
+
+        // studentList[studentList.indexOf(formerText)].studentName = editValue//then replace that index value with the new ones
         console.log("studentlist is now: " + studentList);
       }
       $('.clicked').attr('class', 'editable student'); //make the table cell editable again
@@ -179,37 +212,53 @@ function editCells(){
     }
     $('#editing').remove(); //remove the text input box
     alphabetizeStudents();  // alphabetize list of students (in case changes were made to student names)
+    renderStudents();
+    renderAssignments();
   }); // end on.blur
 }
 
 
 
 $('table').on('click', '.editable',  function(){
-  var storedName = $(this).siblings(':first').attr('id');
+  if ($(this).is('.student')) {
+    console.log("STUDENT!")
+    storedName = $(this).text();
+  }
+  else if ($(this).is('.assignment')){
+    console.log("ASSIGNMENT!")
+    storedName = $(this).attr('id');
+  }
+  else if ($(this).is('.score')) {
+  console.log("SCORE!");
+  storedName = $(this).siblings(':first').attr('id');
   pointsToRemove  = Number($(this).text());  //subract off the points in the cell FIRST so the score can be lowered to a new value if needed. otherwise it just gets bigger every time
   console.log("points to remove: " + pointsToRemove)
+  }
+  else {
+    console.log("neither assignment nor student nor score")
+  }
   console.log("stored name: " + storedName)
   $(this).addClass('clicked');
+
   // if ($(this).is('.score')) {
   //   pointsToDisplay = Number($(this).text());
   // }
   // console.log("points to display:", pointsToDisplay)
   pointsToAdd = 0; //number of points to add to student score. resets each time to zero so the value will always be what is entered in in the score box when clicked
-  editCells();
-  setTimeout(waiting, 4000)
-  function waiting(){
-    studentList.forEach(function(current, index, array){
-      if (current.studentName === storedName) {
-        current.removePoints();
-        renderStudents();
-        console.log(studentList[index])
-        renderAssignments();
-
-      }
-    })
-  }
+  editCells(storedName);
 }); // if the cell has class 'editable', then change the class to 'clicked' and edit the cell
 
+$('#update').on('click', function(){
+ console.log("this button doesn't do anything!!!!")
+ // studentList.forEach(function(current, index, array){
+ //    if (current.studentName === storedName) {
+ //      current.removePoints();
+ //      renderStudents();
+ //      console.log(studentList[index])
+ //      renderAssignments();
+ //    }
+ //  })
+});
 
 function deleteStudent(studentName){
   var found = false;

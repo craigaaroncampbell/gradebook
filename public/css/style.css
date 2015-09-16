@@ -1,10 +1,14 @@
+/**{
+  border: 1px dashed red;
+}*/
+
 .editable{
   color: green;
   border: 1px solid green;
 }
 
 .clicked{
-  color:blue;
+  color: blue;
   border: 1px solid purple;
 }
 
@@ -19,3 +23,4 @@ td, th {
 #editing{
   color: red;
 }
+
