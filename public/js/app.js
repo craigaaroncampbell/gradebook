@@ -101,7 +101,6 @@ $('#addStudent').on('click', function(){
       alphabetizeStudents();// alphabetize list of students (in case changes were made to student names)
       renderStudents();
       renderAssignments();
-      renderScores();
    }
 });
 
@@ -200,7 +199,6 @@ $('#addAssignment').on('click', function(){
     newAssignment.addAssignment();
     renderStudents();
     renderAssignments();
-    renderScores();
   }
 });
 
@@ -274,19 +272,20 @@ function editCells(formerText, assignmentText){
     //for editing scores
     else if ($('.clicked').is($('.score'))) {
       console.log("SCORE!!!");
-      $('.clicked').attr('class', 'editable score'); //make the table cell editable again
-      console.log("points to remove: " + pointsToRemove)
+      console.log("points to remove: " + pointsToRemove);
       studentList.forEach(function(current, index, array){
         if (current.studentName === formerText){
           current.removePoints();
         }
       })
 
+
       if (Number($(this).val()) >= 0) {  // if text is input, then it is NaN, which is false so we don't change pointToAdd
         pointsToAdd = Number($(this).val());
       }
-      console.log("points to add: " + pointsToAdd)
+      console.log("points to add: " + pointsToAdd);
       var assignmentName = assignmentText;
+
       studentList.forEach(function(current, index, array){
         if (current.studentName === formerText){
           current.addPoints();
@@ -294,12 +293,23 @@ function editCells(formerText, assignmentText){
 
       })
 
+      if ($('.clicked').is($('#' + formerText + assignmentText))) {
+        console.log("OK!!!!!!!!!!!!!!!!!!")
+        scoreList.forEach(function(current, index, array){
+          console.log($('.clicked').attr('id'))
+          if (current.scoreName === $('.clicked').attr('id')) {
+            current.score = pointsToAdd;
+          }
+
+        })
+      }
+
+      $('.clicked').attr('class', 'editable score'); //remove the clicked class
     }
     $('#editing').remove(); //remove the text input box
     alphabetizeStudents();  // alphabetize list of students (in case changes were made to student names)
     renderStudents();
     renderAssignments();
-    renderScores();
   }); // end on.blur
 }
 
@@ -316,11 +326,12 @@ $('table').on('click', '.editable',  function(){
   }
   else if ($(this).is('.score')) {
   console.log("SCORE!");
-  // var newScore = new Score(# , pointsToAdd)
   storedName = $(this).siblings(':first').attr('id');
   storedAssignment =  $(this).attr('id').slice(storedName.length);
   console.log("stored assignment: " + storedAssignment)
   pointsToRemove  = Number($(this).text());  //subract off the points in the cell FIRST so the score can be lowered to a new value if needed. otherwise it just gets bigger every time
+  var newScore = new Score(storedName + storedAssignment , 0);
+  scoreList.push(newScore);
   }
   else {
     console.log("neither assignment nor student nor score")
@@ -355,7 +366,6 @@ $('#deleteStudent').on('click', function(){
    deleteStudent(properCapitalization); // search assignmentList for the object and remove it.
    renderStudents();
    renderAssignments();
-   renderScores();
   }
 });
 
@@ -388,7 +398,6 @@ $('#deleteAssignment').on('click', function(){
    deleteAssignment(properCapitalization); // search assignmentList for the object and remove it.
    renderStudents();
    renderAssignments();
-   renderScores();
   }
 });
 
@@ -410,7 +419,3 @@ var lowerAlphabet;
     }
   }
 }//end alphabetizeStudents()
-
-function renderScores(){
-
-}
