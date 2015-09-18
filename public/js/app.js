@@ -4,9 +4,8 @@ console.log('app.js file is being read');
 var formerValue;
 var assignmentList = [];
 var studentList = [];
-// var scoreList = [{"scoreName": "DaveAssignment1", "score": 4}, {"scoreName": "BobAssignment1", "score": 3}, {"scoreName": "BobTest", "score": 5}];
 var scoreList = [];
-var totalPointsPossible = 0; // start at zero, increase when assignments added
+var totalPointsPossible = 0;
 var pointsToAdd = 0;
 var pointsToRemove = 0;
 var storedName;
@@ -22,7 +21,6 @@ function Score(scoreName, score){
 function Student(studentName){
   this.studentName = studentName;
   this.totalScore = 0;
-  // this.assignments = assignmentList;
 }
 
 Student.prototype.addPoints = function(){
@@ -75,14 +73,14 @@ Student.prototype.addStudent = function(){
 function renderStudents(){
   $('tr').find('.student').parent().remove(); //this will remove ALL tr with student class children
   for (var i =0; i < studentList.length; i++){
-  var table = document.getElementById('table');
-  var newRow = document.createElement('tr');
-  table.appendChild(newRow);
-  // studentList[i].removePoints();
-  // studentList[i].addPoints();
-  studentList[i].getPercentScore();
-  studentList[i].getLetterGrade();
-  newRow.innerHTML = '<td class="editable student" id="'  + studentList[i].studentName + '">' + studentList[i].studentName + '</td> <td id="letterGrade' + studentList[i].studentName+'">' + studentList[i].letterGrade + '</td> <td id="percentGrade'+ studentList[i].studentName +'">' + studentList[i].percentGrade+ '</td>';
+    var table = document.getElementById('table');
+    var newRow = document.createElement('tr');
+    table.appendChild(newRow);
+    // studentList[i].removePoints();
+    // studentList[i].addPoints();
+    studentList[i].getPercentScore();
+    studentList[i].getLetterGrade();
+    newRow.innerHTML = '<td class="editable student" id="'  + studentList[i].studentName + '">' + studentList[i].studentName + '</td> <td id="letterGrade' + studentList[i].studentName+'">' + studentList[i].letterGrade + '</td> <td id="percentGrade'+ studentList[i].studentName +'">' + studentList[i].percentGrade + '</td>';
   }
 }
 
@@ -403,19 +401,27 @@ $('#deleteAssignment').on('click', function(){
 
 
 function alphabetizeStudents(){
-/*
-the for loop always alphabetizes in one go because we start with one item then 2. The array is ALWAYS alphabetized before adding a new student, and becuause the student is beign added to the FRONT of the list (unshift), it always works.
-******
-Otherwise this would need a while loop to keep iterating over and over until it is order. Then a check to see if any changes were made on the last iteration. If not, end the loop.
-*/
-var higherAlphabet; //declared in the lexical scope of this function so it cannot be tampered with accidentally (as it could if it was in the global scope) and mess up the  alphabetizing
-var lowerAlphabet;
-  for (var i = 0; i < studentList.length - 1 ; i++){ // length-1 becasue we do the last comparison on the next-to-last index
-    if (studentList[i+1].studentName < studentList[i].studentName){ //if 2 consecutive students are NOT in alphabetical order then...
-      higherAlphabet = studentList[i].studentName;  //store the higher value
-      lowerAlphabet = studentList[i+1].studentName; //store the higher value
-      studentList[i].studentName = lowerAlphabet;  //swap the two values
-      studentList[i+1].studentName = higherAlphabet;
-    }
-  }
+  /*
+  the for loop always alphabetizes in one go when new students are addd because we start with one item then 2. The array is ALWAYS alphabetized before adding a new student, and becuause the student is beign added to the FRONT of the list (unshift), it always works.
+  ****** HOWEVER, when changing names, the student would only be shifted by ONE cell up (but will go down as many as needed). so for students going UP (i.e to an earlier place in the alphabetized list) if that needs to be more than one cell up, then a loop is needed, and must be iterated through for each cell that the student shifts up.
+
+  Otherwise this would need a while loop to keep iterating over and over until it is order. Then a check to see if any changes were made on the last iteration. If not, end the loop.
+  */
+  var higherAlphabet; //declared in the lexical scope of this function so it cannot be tampered with accidentally (as it could if it was in the global scope) and mess up the  alphabetizing
+  var lowerAlphabet;
+  while (true){
+    var changeCounter = 0;
+    for (var i = 0; i < studentList.length - 1 ; i++){ // length-1 becasue we do the last comparison on the next-to-last index
+      if (studentList[i+1].studentName < studentList[i].studentName){ //if 2 consecutive students are NOT in alphabetical order then...
+        higherAlphabet = studentList[i].studentName;  //store the higher value
+        lowerAlphabet = studentList[i+1].studentName; //store the higher value
+        studentList[i].studentName = lowerAlphabet;  //swap the two values
+        studentList[i+1].studentName = higherAlphabet;
+        changeCounter ++;
+      }
+    } // end for loop
+    if (changeCounter === 0){
+      break;
+      }
+  }//end while loop
 }//end alphabetizeStudents()
