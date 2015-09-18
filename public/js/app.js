@@ -48,8 +48,8 @@ Student.prototype.getLetterGrade = function() {
 
 }
 
-Student.prototype.addStudent = function(){
-  if (studentList[0] === undefined){ //if list is empty
+Student.prototype.addStudent = function(){  // adds student to the beginning of  studentList array
+  if (studentList[0] === undefined){ //if list is empty, put the first student in
     studentList.unshift(this);
     console.log(studentList)
   }
@@ -73,14 +73,11 @@ Student.prototype.addStudent = function(){
 function renderStudents(){
   $('tr').find('.student').parent().remove(); //this will remove ALL tr with student class children
   for (var i =0; i < studentList.length; i++){
-    var table = document.getElementById('table');
-    var newRow = document.createElement('tr');
-    table.appendChild(newRow);
-    // studentList[i].removePoints();
-    // studentList[i].addPoints();
     studentList[i].getPercentScore();
     studentList[i].getLetterGrade();
-    newRow.innerHTML = '<td class="editable student" id="'  + studentList[i].studentName + '">' + studentList[i].studentName + '</td> <td id="letterGrade' + studentList[i].studentName+'">' + studentList[i].letterGrade + '</td> <td id="percentGrade'+ studentList[i].studentName +'">' + studentList[i].percentGrade + '</td>';
+    console.log(studentList[i].studentName + " : " + studentList[i].totalScore )
+
+    $('#table').append('<tr><td class="editable student" id="'  + studentList[i].studentName + '">' + studentList[i].studentName + '</td> <td id="letterGrade' + studentList[i].studentName+'">' + studentList[i].letterGrade + '</td> <td id="percentGrade'+ studentList[i].studentName +'">' + studentList[i].percentGrade + '</td></tr>');
   }
 }
 
@@ -96,7 +93,7 @@ $('#addStudent').on('click', function(){
       var newStudent = new Student(properCapitalization);
       newStudent.addStudent();
       // console.log(studentList[0].studentName)
-      // alphabetizeStudents();// alphabetize list of students (in case changes were made to student names)
+      alphabetizeStudents();// alphabetize list of students (in case changes were made to student names)
       renderStudents();
       renderAssignments();
    }
@@ -306,7 +303,7 @@ function editCells(formerText, assignmentText){
       $('.clicked').attr('class', 'editable score'); //remove the clicked class
     }
     $('#editing').remove(); //remove the text input box
-    // alphabetizeStudents();  // alphabetize list of students (in case changes were made to student names)
+    alphabetizeStudents();  // alphabetize list of students (in case changes were made to student names)
     renderStudents();
     renderAssignments();
   }); // end on.blur
@@ -412,12 +409,13 @@ function alphabetizeStudents(){
   var lowerAlphabet;
   while (true){
     var changeCounter = 0;
+
     for (var i = 0; i < studentList.length - 1 ; i++){ // length-1 becasue we do the last comparison on the next-to-last index
       if (studentList[i+1].studentName < studentList[i].studentName){ //if 2 consecutive students are NOT in alphabetical order then...
-        higherAlphabet = studentList[i].studentName;  //store the higher value
-        lowerAlphabet = studentList[i+1].studentName; //store the higher value
-        studentList[i].studentName = lowerAlphabet;  //swap the two values
-        studentList[i+1].studentName = higherAlphabet;
+        higherAlphabet = studentList[i];  //store the higher value
+        lowerAlphabet = studentList[i+1]; //store the higher value
+        studentList[i]= lowerAlphabet;  //swap the two values
+        studentList[i+1] = higherAlphabet;
         changeCounter ++;
       }
     } // end for loop
