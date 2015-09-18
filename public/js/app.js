@@ -96,7 +96,7 @@ $('#addStudent').on('click', function(){
       var newStudent = new Student(properCapitalization);
       newStudent.addStudent();
       // console.log(studentList[0].studentName)
-      alphabetizeStudents();// alphabetize list of students (in case changes were made to student names)
+      // alphabetizeStudents();// alphabetize list of students (in case changes were made to student names)
       renderStudents();
       renderAssignments();
    }
@@ -297,6 +297,7 @@ function editCells(formerText, assignmentText){
           console.log($('.clicked').attr('id'))
           if (current.scoreName === $('.clicked').attr('id')) {
             current.score = pointsToAdd;
+            pointsToAdd  = 0;  //set pointsToAdd equal to 0 after adjusting current score in order to prevent eroneus behavior from having data stored here when it shouldn't be.
           }
 
         })
@@ -305,7 +306,7 @@ function editCells(formerText, assignmentText){
       $('.clicked').attr('class', 'editable score'); //remove the clicked class
     }
     $('#editing').remove(); //remove the text input box
-    alphabetizeStudents();  // alphabetize list of students (in case changes were made to student names)
+    // alphabetizeStudents();  // alphabetize list of students (in case changes were made to student names)
     renderStudents();
     renderAssignments();
   }); // end on.blur
