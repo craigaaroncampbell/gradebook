@@ -1,16 +1,64 @@
 'use strict';
+$(document).ready(function(){
+
+  if(!(localStorage.getItem("studentArray"))){
+    console.log("We ain't got no stored STUDENT data! Luckily, I just saved one for you!");
+    studentList = []
+    localStorage.setItem("studentArray", JSON.stringify(studentList));
+  }
+  else {
+    studentList = JSON.parse(localStorage.getItem("studentArray"))
+    studentList.forEach(function(current, index, array){
+      Object.setPrototypeOf(current, Student.prototype);
+    })
+
+  }
+
+  if(!(localStorage.getItem("assignmentArray"))){
+    console.log("We ain't got no stored ASSIGNMENT data! Luckily, I just saved one for you!");
+    assignmentList = [];
+    localStorage.setItem("assignmentArray", JSON.stringify(assignmentList));
+  }
+  else {
+    assignmentList = JSON.parse(localStorage.getItem("assignmentArray"))
+    assignmentList.forEach(function(current, index, array){
+      Object.setPrototypeOf(current, Assignment.prototype);
+    })
+  }
+
+  if(!(localStorage.getItem("scoreArray"))){
+    console.log("We ain't got no stored SCORE data! Luckily, I just saved one for you!");
+    scoreList = [];
+    localStorage.setItem("scoreArray", JSON.stringify(scoreList));
+  }
+  else {
+    scoreList = JSON.parse(localStorage.getItem("scoreArray"))
+    scoreList.forEach(function(current, index, array){
+      Object.setPrototypeOf(current, Score.prototype);
+    })
+  }
+  alphabetizeStudents();
+  renderStudents();
+  renderAssignments();
+  console.log("READY!!!!!")
+}) // end document.ready()
+
 
 console.log('app.js file is being read');
 var formerValue;
-var assignmentList = [];
-var studentList = [];
-var scoreList = [];
+var studentList;
+var assignmentList;
+var scoreList;
+var storedStudentArray;
+var storedAssignmentArray;
+var storedScoreArray;
 var totalPointsPossible = 0;
 var pointsToAdd = 0;
 var pointsToRemove = 0;
 var storedName;
 var storedAssignment;
 var scoreYet;
+
 
 function Score(scoreName, score){
   this.scoreName = scoreName;
@@ -32,11 +80,9 @@ Student.prototype.removePoints = function(){
 }
 
 
-
 Student.prototype.getPercentScore = function(){
  this.percentGrade = ((this.totalScore / totalPointsPossible) * 100) // display this using.toString() + "%" but keep it as a number here for  getting letter grade
 }
-
 
 Student.prototype.getLetterGrade = function() {
   if (this.percentGrade >= 90){this.letterGrade = "A";}
@@ -72,7 +118,8 @@ Student.prototype.addStudent = function(){  // adds student to the beginning of 
 
 function renderStudents(){
   $('tr').find('.student').parent().remove(); //this will remove ALL tr with student class children
-  for (var i =0; i < studentList.length; i++){
+  for (var i = 1; i < studentList.length; i++){
+    console.log("studentList: ", studentList)
     studentList[i].getPercentScore();
     studentList[i].getLetterGrade();
     console.log(studentList[i].studentName + " : " + studentList[i].totalScore )
@@ -92,17 +139,21 @@ $('#addStudent').on('click', function(){
 
       var newStudent = new Student(properCapitalization);
       newStudent.addStudent();
+
       // console.log(studentList[0].studentName)
       alphabetizeStudents();// alphabetize list of students (in case changes were made to student names)
+
       renderStudents();
       renderAssignments();
+
+      localStorage.setItem("studentArray", JSON.stringify(studentList));
+      // JSON.parse(localStorage.getItem("studentArray"));
    }
 });
 
 function Assignment(assignmentName, points, score){
   this.assignmentName = assignmentName;
   this.points = points;
-  // this.score = score;
 }
 
 Assignment.prototype.addAssignment = function(){
@@ -156,7 +207,6 @@ function renderAssignments(){
             scoreYet = false;
           }  // continue iterating until either all scores objects have been checked or  one is found (and break is done)
 
-
         } // end k loop  for the current student (iteration of j loop) if  break wasn't done already
       }
       else{
@@ -194,6 +244,8 @@ $('#addAssignment').on('click', function(){
     newAssignment.addAssignment();
     renderStudents();
     renderAssignments();
+    localStorage.setItem("assignmentArray", JSON.stringify(assignmentList));
+    // JSON.parse(localStorage.getItem("assignmentArray"));
   }
 });
 
@@ -229,7 +281,11 @@ function editCells(formerText, assignmentText){
           console.log(assignmentList);
         }
       }) //end forEach
-
+       localStorage.setItem("assignmentArray", JSON.stringify(assignmentList));
+        assignmentList = JSON.parse(localStorage.getItem("assignmentArray"));
+        assignmentList.forEach(function(current, index, array){
+          Object.setPrototypeOf(current, Assignment.prototype);
+        })
       $('.clicked').attr('class', 'editable assignment'); //make the table cell editable again
     } // end if assignment
 
@@ -256,8 +312,12 @@ function editCells(formerText, assignmentText){
             studentList[index].studentName = editValue; //change the matching student name to the edit value
           }
         }) // end forEach
+        localStorage.setItem("studentArray", JSON.stringify(studentList));
+        studentList = JSON.parse(localStorage.getItem("studentArray"));
+        studentList.forEach(function(current, index, array){
+          Object.setPrototypeOf(current, Student.prototype);
+        })
 
-        // studentList[studentList.indexOf(formerText)].studentName = editValue//then replace that index value with the new ones
         console.log("studentlist is now: ");
         console.log(studentList);
       }
@@ -335,6 +395,7 @@ $('table').on('click', '.editable',  function(){
   console.log("stored name: " + storedName)
   $(this).addClass('clicked');
   editCells(storedName, storedAssignment);
+
 });
 
 
@@ -399,6 +460,7 @@ $('#deleteAssignment').on('click', function(){
 
 
 function alphabetizeStudents(){
+
   /*
   the for loop always alphabetizes in one go when new students are addd because we start with one item then 2. The array is ALWAYS alphabetized before adding a new student, and becuause the student is beign added to the FRONT of the list (unshift), it always works.
   ****** HOWEVER, when changing names, the student would only be shifted by ONE cell up (but will go down as many as needed). so for students going UP (i.e to an earlier place in the alphabetized list) if that needs to be more than one cell up, then a loop is needed, and must be iterated through for each cell that the student shifts up.
