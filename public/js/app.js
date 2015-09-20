@@ -1,5 +1,12 @@
 'use strict';
 $(document).ready(function(){
+  if (!(localStorage.getItem("totalPoints"))){
+    totalPointsPossible = 0;
+    localStorage.setItem("totalPoints", JSON.stringify(totalPointsPossible));
+  }
+  else{
+    totalPointsPossible = Number(localStorage.getItem("totalPoints"));
+  }
 
   if(!(localStorage.getItem("studentArray"))){
     console.log("We ain't got no stored STUDENT data! Luckily, I just saved one for you!");
@@ -52,12 +59,13 @@ var scoreList;
 var storedStudentArray;
 var storedAssignmentArray;
 var storedScoreArray;
-var totalPointsPossible = 0;
+var totalPointsPossible;
 var pointsToAdd = 0;
 var pointsToRemove = 0;
 var storedName;
 var storedAssignment;
 var scoreYet;
+var found;
 
 
 function Score(scoreName, score){
@@ -160,6 +168,8 @@ Assignment.prototype.addAssignment = function(){
   if (assignmentList[0] === undefined){ //if list is empty
     assignmentList.unshift(this);
     totalPointsPossible += this.points
+    console.log(totalPointsPossible)
+    localStorage.setItem("totalPoints", JSON.stringify(totalPointsPossible));
     console.log(assignmentList)
   }
   else { // otherwise the list has students. do the following:
@@ -173,9 +183,11 @@ Assignment.prototype.addAssignment = function(){
       }
     }) // end forEach
     if (!assignmentMatch) { // if no match for that student name, then put the student in the list
-    assignmentList.unshift(storedAssignmentObject);
-    totalPointsPossible += this.points;
-    console.log(assignmentList);
+    assignmentList.unshift(this);
+    totalPointsPossible += this.points
+    console.log(totalPointsPossible)
+    localStorage.setItem("totalPoints", JSON.stringify(totalPointsPossible));
+    console.log(assignmentList)
       }
   }
 }
@@ -250,9 +262,12 @@ $('#addAssignment').on('click', function(){
 });
 
 
-function editCells(formerText, assignmentText){
-  var found = false;  // used for seing if students or assignments have been duplicated
-  console.log("formerValue: " + formerText);
+function editCells(formerStudentText, formerAssignmentText){
+
+
+  found = false;
+  // used for seing if students or assignments have been duplicated
+  console.log("formerValue: " + formerStudentText);
   $('.clicked').text(''); // clear the old text
   $('<input>').attr({ type: 'text', id: 'editing'}).appendTo('.clicked'); // insert a text input box
   $('#editing').focus(); //put focus on the new text input box
@@ -260,112 +275,170 @@ function editCells(formerText, assignmentText){
   $('#editing').on('blur', function(){
     var originalInput = $('#editing').val()
     var editValue = originalInput.slice(0,1).toUpperCase() + originalInput.slice(1).toLowerCase();
+    if (editValue === ' '){ // string with a space has length of 1
+      editValue = ''; //so set it to empty string with lenght of 0
+    }
+    if (editValue.length > 0){ //so empty string will not work! Thus blanks won't run!
+      $('.clicked').text(editValue); //set new table cell text
 
-    $('.clicked').text(editValue); //set new table cell text
+      //for editing assignments:
+      if ($('.clicked').is($('.assignment'))) {   // if cell is assignment class)
+        console.log("ASSIGNMENT!!!");
 
-    //for editing assignments:
-    if ($('.clicked').is($('.assignment'))) {   // if cell is assignment class f)
-      console.log("ASSIGNMENT!!!");
-
-      $('.clicked').attr('id', editValue); // set id to the edited value
-      assignmentList.forEach(function(current, index, array){
-        if (current.assignmentName === editValue){ //if this new edited value   WAS already in the assignment list then don't change anything! make it its original value. no duplicates!
-        console.log("that was already in the list! So we're not changing anything!")
-        $('.clicked').text(formerValue);  // keep the text the same as it was before
-        $('.clicked').attr('id', formerText); //keep id same as before
-        found = true;
-        }
-        if (found === false) {  // if it was NOT already there, then change the assignment name and list
-          assignmentList[index].assignmentName = editValue//then replace that index value with the new ones
-          console.log("assignment list is now: ");
-          console.log(assignmentList);
-        }
-      }) //end forEach
-       localStorage.setItem("assignmentArray", JSON.stringify(assignmentList));
-        assignmentList = JSON.parse(localStorage.getItem("assignmentArray"));
+        $('.clicked').attr('id', editValue); // set id to the edited value
         assignmentList.forEach(function(current, index, array){
-          Object.setPrototypeOf(current, Assignment.prototype);
-        })
-      $('.clicked').attr('class', 'editable assignment'); //make the table cell editable again
-    } // end if assignment
-
-    // for editing student names
-    else if ($('.clicked').is($('.student'))) {   // if cell is student class)
-      console.log('STUDENT!!!!');
-
-      $('.clicked').attr('id', editValue); // set id to the edited value
-
-      studentList.forEach(function(current, index, array){
-        if (current.studentName === editValue){ //if this new edited value   WAS already in the student list then don't change anything! make it its original value. no duplicates!
+          if (current.assignmentName === editValue){ //if this new edited value   WAS already in the assignment list then don't change anything! make it its original value. no duplicates!
           console.log("that was already in the list! So we're not changing anything!")
-          $('.clicked').text(formerText);  // keep the text the same as it was before
-          $('.clicked').attr('id', formerText); //keep id same as before
+          // $('.clicked').text(formerAssignmentText);  // keep the text the same as it was before
+          // $('.clicked').attr('id', formerStudentText); //keep id same as before
           found = true;
-        }
-      }) //end forEach
-
-      if (found === false) {
-        console.log("ok new name!")
-        // if it was NOT already there, then change the student name and list by CHANGING the studentName on that object that USED TO match the clicked cell's name
-        studentList.forEach(function(current, index, array){
-          if (current.studentName === formerText) { // find the student name that matches the old text of the clicked cell
-            studentList[index].studentName = editValue; //change the matching student name to the edit value
           }
-        }) // end forEach
+        }) // end for Each
+
+        if (found === false) {  // if it was NOT already there, then change the assignment name and list
+
+          assignmentList.forEach(function(current, index, array){
+
+            if (current.assignmentName === formerAssignmentText){
+              assignmentList[index].assignmentName = editValue //then replace that index value with the new ones
+              console.log("assignment list is now: ");
+              console.log(assignmentList);
+            }
+          }) //end forEach
+        }
+          localStorage.setItem("assignmentArray", JSON.stringify(assignmentList));
+          assignmentList = JSON.parse(localStorage.getItem("assignmentArray"));
+          assignmentList.forEach(function(current, index, array){
+            Object.setPrototypeOf(current, Assignment.prototype);
+          })
+
+
+          scoreList.forEach(function(current, index, array){
+            if (current.scoreName.slice(-(formerAssignmentText.length)) === formerAssignmentText ){  // if the first part of the scoreName matches the name of the assignment that was JUST changed (the old name not the new one), then replace the first part of scoreName with the NEW name
+              current.scoreName = current.scoreName.slice(0, (current.scoreName.length - formerAssignmentText.length)) + editValue;
+            }
+          })
+
+
+          localStorage.setItem("scoreArray", JSON.stringify(scoreList));
+          scoreList = JSON.parse(localStorage.getItem("scoreArray"));
+          scoreList.forEach(function(current, index, array){
+            Object.setPrototypeOf(current, Score.prototype);
+          })
+
+        $('.clicked').attr('class', 'editable assignment'); //make the table cell editable again
+      } // end if assignment
+
+      // for editing student names
+      else if ($('.clicked').is($('.student'))) {   // if cell is student class)
+        console.log('STUDENT!!!!');
+
+        $('.clicked').attr('id', editValue); // set id to the edited value
+
+        studentList.forEach(function(current, index, array){
+          if (current.studentName === editValue){ //if this new edited value   WAS already in the student list then don't change anything! make it its original value. no duplicates!
+            console.log("that was already in the list! So we're not changing anything!")
+            // $('.clicked').text(formerStudentText);  // keep the text the same as it was before
+            // $('.clicked').attr('id', formerStudentText); //keep id same as before
+            found = true;
+          }
+        }) //end forEach
+
+        if (found === false) {
+          console.log("ok new name!")
+          // if it was NOT already there, then change the student name and list by CHANGING the studentName on that object that USED TO match the clicked cell's name
+          studentList.forEach(function(current, index, array){
+            if (current.studentName === formerStudentText) { // find the student name that matches the old text of the clicked cell
+              studentList[index].studentName = editValue; //change the matching student name to the edit value
+            }
+          }) // end forEach
+
+          localStorage.setItem("studentArray", JSON.stringify(studentList));
+          studentList = JSON.parse(localStorage.getItem("studentArray"));
+          studentList.forEach(function(current, index, array){
+            Object.setPrototypeOf(current, Student.prototype);
+          })
+
+          scoreList.forEach(function(current, index, array){
+            if (current.scoreName.slice(0, formerStudentText.length) === formerStudentText ){  // if the first part of the scoreName matches the name of teh studetn who was JUST changed (the old name not the new one), then replace the first part of scoreName with the NEW name
+              current.scoreName = editValue + current.scoreName.slice(formerStudentText.length)
+            }
+          })
+
+          localStorage.setItem("scoreArray", JSON.stringify(scoreList));
+          scoreList = JSON.parse(localStorage.getItem("scoreArray"));
+          scoreList.forEach(function(current, index, array){
+            Object.setPrototypeOf(current, Score.prototype);
+          })
+
+          console.log("studentlist is now: " , studentList);
+          console.log("scorelist: ", scoreList);
+        }
+        $('.clicked').attr('class', 'editable student'); //make the table cell editable again
+      } // end if student
+
+      //for editing scores
+      else if ($('.clicked').is($('.score'))) {
+        console.log("SCORE!!!");
+        console.log("points to remove: " + pointsToRemove);
+        studentList.forEach(function(current, index, array){
+          if (current.studentName === formerStudentText){
+            current.removePoints();
+          }
+        })
+
+
+        if (Number($(this).val()) >= 0) {  // if text is input, then it is NaN, which is false so we don't change pointToAdd
+          pointsToAdd = Number($(this).val());
+        }
+         else{ // what to do if the input is not a number >= 0
+          pointsToAdd = 0;
+        }
+
+        console.log("points to add: " + pointsToAdd);
+        var assignmentName = formerAssignmentText;
+
+        studentList.forEach(function(current, index, array){
+          if (current.studentName === formerStudentText){
+            current.addPoints();
+          }
+
+        })
+
+        if ($('.clicked').is($('#' + formerStudentText + formerAssignmentText))) {
+          console.log("OK!!!!!!!!!!!!!!!!!!")
+          scoreList.forEach(function(current, index, array){
+            console.log($('.clicked').attr('id'))
+            if (current.scoreName === $('.clicked').attr('id')) {
+              current.score = pointsToAdd;
+              pointsToAdd  = 0;  //set pointsToAdd equal to 0 after adjusting current score in order to prevent eroneus behavior from having data stored here when it shouldn't be.
+            }
+
+          })
+        }
+        localStorage.setItem("scoreArray", JSON.stringify(scoreList));
+        scoreList = JSON.parse(localStorage.getItem("scoreArray"));
+        scoreList.forEach(function(current, index, array){
+          Object.setPrototypeOf(current, Score.prototype);
+        })
         localStorage.setItem("studentArray", JSON.stringify(studentList));
         studentList = JSON.parse(localStorage.getItem("studentArray"));
         studentList.forEach(function(current, index, array){
-          Object.setPrototypeOf(current, Student.prototype);
-        })
+            Object.setPrototypeOf(current, Student.prototype);
+          })
 
-        console.log("studentlist is now: ");
-        console.log(studentList);
+        $('.clicked').attr('class', 'editable score'); //remove the clicked class
       }
-      $('.clicked').attr('class', 'editable student'); //make the table cell editable again
-    } // end if student
-
-    //for editing scores
-    else if ($('.clicked').is($('.score'))) {
-      console.log("SCORE!!!");
-      console.log("points to remove: " + pointsToRemove);
-      studentList.forEach(function(current, index, array){
-        if (current.studentName === formerText){
-          current.removePoints();
-        }
-      })
-
-
-      if (Number($(this).val()) >= 0) {  // if text is input, then it is NaN, which is false so we don't change pointToAdd
-        pointsToAdd = Number($(this).val());
-      }
-      console.log("points to add: " + pointsToAdd);
-      var assignmentName = assignmentText;
-
-      studentList.forEach(function(current, index, array){
-        if (current.studentName === formerText){
-          current.addPoints();
-        }
-
-      })
-
-      if ($('.clicked').is($('#' + formerText + assignmentText))) {
-        console.log("OK!!!!!!!!!!!!!!!!!!")
-        scoreList.forEach(function(current, index, array){
-          console.log($('.clicked').attr('id'))
-          if (current.scoreName === $('.clicked').attr('id')) {
-            current.score = pointsToAdd;
-            pointsToAdd  = 0;  //set pointsToAdd equal to 0 after adjusting current score in order to prevent eroneus behavior from having data stored here when it shouldn't be.
-          }
-
-        })
-      }
-
-      $('.clicked').attr('class', 'editable score'); //remove the clicked class
+      $('#editing').remove(); //remove the text input box
+      alphabetizeStudents();  // alphabetize list of students (in case changes were made to student names)
+      renderStudents();
+      renderAssignments();
     }
-    $('#editing').remove(); //remove the text input box
-    alphabetizeStudents();  // alphabetize list of students (in case changes were made to student names)
-    renderStudents();
-    renderAssignments();
+    else{
+      // document.location.reload(); // forced reload not necessary becuase storage has not changed. So it is  rendering the same as before the attempted change
+      renderStudents();
+      renderAssignments();
+    }
   }); // end on.blur
 }
 
@@ -378,20 +451,28 @@ $('table').on('click', '.editable',  function(){
   }
   else if ($(this).is('.assignment')){
     console.log("ASSIGNMENT!")
-    storedName = $(this).attr('id');
+    // storedName = $(this).attr('id');
+    storedAssignment = $(this).attr('id');
   }
   else if ($(this).is('.score')) {
-  console.log("SCORE!");
-  storedName = $(this).siblings(':first').attr('id');
-  storedAssignment =  $(this).attr('id').slice(storedName.length);
-  console.log("stored assignment: " + storedAssignment)
-  pointsToRemove  = Number($(this).text());  //subract off the points in the cell FIRST so the score can be lowered to a new value if needed. otherwise it just gets bigger every time
-  var newScore = new Score(storedName + storedAssignment , 0);
-  scoreList.push(newScore);
+    console.log("SCORE!");
+    storedName = $(this).siblings(':first').attr('id');
+    storedAssignment =  $(this).attr('id').slice(storedName.length);
+    console.log("stored assignment: " + storedAssignment)
+
+    if (Number($(this).text()) !== NaN){
+      pointsToRemove  = Number($(this).text());  //subract off the points in the cell FIRST so the score can be lowered to a new value if needed. otherwise it just gets bigger every time
+    }
+    else{
+      pointsToRemove = 0;
+    }
+    var newScore = new Score(storedName + storedAssignment , 0);
+    scoreList.push(newScore);
   }
   else {
     console.log("neither assignment nor student nor score")
   }
+
   console.log("stored name: " + storedName)
   $(this).addClass('clicked');
   editCells(storedName, storedAssignment);
