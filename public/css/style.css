@@ -1,6 +1,4 @@
-/**{
-  border: 1px dashed red;
-}*/
+
 
 .editable{
   color: green;
@@ -12,15 +10,51 @@
   border: 1px solid purple;
 }
 
+#editing{
+  color: red;
+}
+
 h1 {
   color: blue;
 }
 
 td, th {
   min-width: 20px;
+  text-align: center;
 }
 
-#editing{
+form {
+  max-width: 25%;
+
+}
+
+.textInput {
   color: red;
 }
+
+footer {
+  text-align: center;
+}
+
+#table , td {
+  margin: 5px;
+  border: 1px solid black;
+  text-align: center;
+
+}
+
+.grades{
+  background-color: lightblue;
+}
+
+.students {
+  background-color: yellow;
+}
+.assignmentPoints{
+  color:blue;
+  text-align: center;
+  display: inline-block;
+
+}
+
 

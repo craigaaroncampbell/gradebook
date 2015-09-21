@@ -89,7 +89,7 @@ Student.prototype.removePoints = function(){
 
 
 Student.prototype.getPercentScore = function(){
- this.percentGrade = ((this.totalScore / totalPointsPossible) * 100) // display this using.toString() + "%" but keep it as a number here for  getting letter grade
+ this.percentGrade = ((this.totalScore / totalPointsPossible) * 100).toFixed(2) // display this using.toString() + "%" but keep it as a number here for  getting letter grade
 }
 
 Student.prototype.getLetterGrade = function() {
@@ -126,13 +126,13 @@ Student.prototype.addStudent = function(){  // adds student to the beginning of 
 
 function renderStudents(){
   $('tr').find('.student').parent().remove(); //this will remove ALL tr with student class children
-  for (var i = 1; i < studentList.length; i++){
+  for (var i = 0; i < studentList.length; i++){
     console.log("studentList: ", studentList)
     studentList[i].getPercentScore();
     studentList[i].getLetterGrade();
     console.log(studentList[i].studentName + " : " + studentList[i].totalScore )
 
-    $('#table').append('<tr><td class="editable student" id="'  + studentList[i].studentName + '">' + studentList[i].studentName + '</td> <td id="letterGrade' + studentList[i].studentName+'">' + studentList[i].letterGrade + '</td> <td id="percentGrade'+ studentList[i].studentName +'">' + studentList[i].percentGrade + '</td></tr>');
+    $('#table').append('<tr><td class="editable student students" id="'  + studentList[i].studentName + '">' + studentList[i].studentName + '</td> <td class="grade grades" id="letterGrade' + studentList[i].studentName+'">' + studentList[i].letterGrade + '</td> <td class ="grade grades" id="percentGrade'+ studentList[i].studentName +'">' + studentList[i].percentGrade + '</td></tr>');
   }
 }
 
@@ -197,6 +197,7 @@ function renderAssignments(){
   var id;
   var placeholder = '';
   $('.assignment').remove();
+
   for (var i = 0; i < assignmentList.length; i++){ // go through assingment list
     for (var j = 0; j < studentList.length; j++) { // for EACH assignment, go through student list and make a new TD with student-assignment id
       if (scoreList[0] !== undefined) { // it there are score objects in the score array already, then go through the k loop
@@ -225,8 +226,6 @@ function renderAssignments(){
         scoreYet = false;
       }
       if (scoreYet === false){
-        console.log("OK LET'S PUT A BLANK ONE IN!");
-
           placeholder = '';
 
           var nameOfStudent = studentList[j].studentName
@@ -238,8 +237,9 @@ function renderAssignments(){
     } // end j loop  (move on to next assignemnt to render)
 
 
-    $('#gradePercent').after('<th class="editable assignment" id=' + assignmentList[i].assignmentName +'>' + assignmentList[i].assignmentName + '<br><table><tr><td>' + assignmentList[i].points +' pts</td></tr></table></th>'); //put put new table header  with assignemnt name after the  grade percent column (newest assignment to the left, older ones pushed to the right)
+    $('#gradePercent').after('<th class="editable assignment" id=' + assignmentList[i].assignmentName +'>' + assignmentList[i].assignmentName + '<br><table><tr><td class="editable assignmentPoints" id="points' + assignmentList[i].assignmentName + '">' + assignmentList[i].points +' pts</td></tr></table></th>'); //put put new table header  with assignemnt name after the  grade percent column (newest assignment to the left, older ones pushed to the right)
   } // end i loop
+
 }
 
 
@@ -267,7 +267,7 @@ function editCells(formerStudentText, formerAssignmentText){
 
   found = false;
   // used for seing if students or assignments have been duplicated
-  console.log("formerValue: " + formerStudentText);
+
   $('.clicked').text(''); // clear the old text
   $('<input>').attr({ type: 'text', id: 'editing'}).appendTo('.clicked'); // insert a text input box
   $('#editing').focus(); //put focus on the new text input box
@@ -289,9 +289,7 @@ function editCells(formerStudentText, formerAssignmentText){
         assignmentList.forEach(function(current, index, array){
           if (current.assignmentName === editValue){ //if this new edited value   WAS already in the assignment list then don't change anything! make it its original value. no duplicates!
           console.log("that was already in the list! So we're not changing anything!")
-          // $('.clicked').text(formerAssignmentText);  // keep the text the same as it was before
-          // $('.clicked').attr('id', formerStudentText); //keep id same as before
-          found = true;
+
           }
         }) // end for Each
 
@@ -326,7 +324,7 @@ function editCells(formerStudentText, formerAssignmentText){
             Object.setPrototypeOf(current, Score.prototype);
           })
 
-        $('.clicked').attr('class', 'editable assignment'); //make the table cell editable again
+        $('.clicked').removeClass('clicked'); //remove clicked class
       } // end if assignment
 
       // for editing student names
@@ -338,8 +336,6 @@ function editCells(formerStudentText, formerAssignmentText){
         studentList.forEach(function(current, index, array){
           if (current.studentName === editValue){ //if this new edited value   WAS already in the student list then don't change anything! make it its original value. no duplicates!
             console.log("that was already in the list! So we're not changing anything!")
-            // $('.clicked').text(formerStudentText);  // keep the text the same as it was before
-            // $('.clicked').attr('id', formerStudentText); //keep id same as before
             found = true;
           }
         }) //end forEach
@@ -469,6 +465,7 @@ $('table').on('click', '.editable',  function(){
     var newScore = new Score(storedName + storedAssignment , 0);
     scoreList.push(newScore);
   }
+
   else {
     console.log("neither assignment nor student nor score")
   }
@@ -541,29 +538,30 @@ $('#deleteAssignment').on('click', function(){
 
 
 function alphabetizeStudents(){
+  if (studentList.length > 1){
+    /*
+    the for loop always alphabetizes in one go when new students are addd because we start with one item then 2. The array is ALWAYS alphabetized before adding a new student, and becuause the student is beign added to the FRONT of the list (unshift), it always works.
+    ****** HOWEVER, when changing names, the student would only be shifted by ONE cell up (but will go down as many as needed). so for students going UP (i.e to an earlier place in the alphabetized list) if that needs to be more than one cell up, then a loop is needed, and must be iterated through for each cell that the student shifts up.
 
-  /*
-  the for loop always alphabetizes in one go when new students are addd because we start with one item then 2. The array is ALWAYS alphabetized before adding a new student, and becuause the student is beign added to the FRONT of the list (unshift), it always works.
-  ****** HOWEVER, when changing names, the student would only be shifted by ONE cell up (but will go down as many as needed). so for students going UP (i.e to an earlier place in the alphabetized list) if that needs to be more than one cell up, then a loop is needed, and must be iterated through for each cell that the student shifts up.
+    Otherwise this would need a while loop to keep iterating over and over until it is order. Then a check to see if any changes were made on the last iteration. If not, end the loop.
+    */
+    var higherAlphabet; //declared in the lexical scope of this function so it cannot be tampered with accidentally (as it could if it was in the global scope) and mess up the  alphabetizing
+    var lowerAlphabet;
+    while (true){
+      var changeCounter = 0;
 
-  Otherwise this would need a while loop to keep iterating over and over until it is order. Then a check to see if any changes were made on the last iteration. If not, end the loop.
-  */
-  var higherAlphabet; //declared in the lexical scope of this function so it cannot be tampered with accidentally (as it could if it was in the global scope) and mess up the  alphabetizing
-  var lowerAlphabet;
-  while (true){
-    var changeCounter = 0;
-
-    for (var i = 0; i < studentList.length - 1 ; i++){ // length-1 becasue we do the last comparison on the next-to-last index
-      if (studentList[i+1].studentName < studentList[i].studentName){ //if 2 consecutive students are NOT in alphabetical order then...
-        higherAlphabet = studentList[i];  //store the higher value
-        lowerAlphabet = studentList[i+1]; //store the higher value
-        studentList[i]= lowerAlphabet;  //swap the two values
-        studentList[i+1] = higherAlphabet;
-        changeCounter ++;
-      }
-    } // end for loop
-    if (changeCounter === 0){
-      break;
-      }
-  }//end while loop
+      for (var i = 0; i < studentList.length - 1 ; i++){ // length-1 becasue we do the last comparison on the next-to-last index
+        if (studentList[i+1].studentName < studentList[i].studentName){ //if 2 consecutive students are NOT in alphabetical order then...
+          higherAlphabet = studentList[i];  //store the higher value
+          lowerAlphabet = studentList[i+1]; //store the higher value
+          studentList[i]= lowerAlphabet;  //swap the two values
+          studentList[i+1] = higherAlphabet;
+          changeCounter ++;
+        }
+      } // end for loop
+      if (changeCounter === 0){
+        break;
+        }
+    }//end while loop
+  }
 }//end alphabetizeStudents()
