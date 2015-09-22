@@ -1,0 +1,23 @@
+{
+  "name": "gradebook",
+  "version": "1.0.0",
+  "description": "",
+  "main": "gradebook-server.js",
+  "dependencies": {
+    "mongodb": "^2.0.43"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/craigcampbell8/gradebook.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/craigcampbell8/gradebook/issues"
+  },
+  "homepage": "https://github.com/craigcampbell8/gradebook#readme"
+}

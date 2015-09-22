@@ -17,22 +17,46 @@
     </ul>
   </nav>
   <content>
-      <form><!-- what will the action file be? -->
-        Add new student name:<input type="text" id="studentName" placeholder="enter a student name"></input></br>
-      <input id="addStudent" type="button" value="add new student">
-      </form>
-      <form> <!-- what will the action file be? -->
-         Add new assignment:<input type="text" id="assignmentName" placeholder="enter a new assignment"></input></br>
-         <input id="addAssignment" type="button" value="add a new assignment">
-      </form>
-      <table id="table">
-        <tr>
-          <th>Student Name</th>
-          <th>Overall Letter Grade</th>
-          <th id="gradePercent">Grade Percent</th>
+    <form>  <!-- what will the action file be? -->
+    <fieldset>
+      <legend> Add Students/Assignments </legend>
 
+        Student name:<input class="textInput" type="text" id="studentName" placeholder="enter a student name"></input></br>
+      <input id="addStudent" type="button" value="add new student">
+      <br>
+         Assignment name:<input class="textInput" type="text" id="assignmentName" placeholder="enter a new assignment"></input>
+         <br>
+         Point Value:
+         <input class="textInput" id="pointValue" type="text" placeholder="enter point value for this assignment"></input>
+         <br>
+           <input id="addAssignment" type="button" value="add a new assignment">
+       </fieldset>
+       </form>
+
+
+      <form><!-- what will the action file be? -->
+        <fieldset>
+          <legend>Delete Students/Assignments</legend>
+        Student name:<input class="textInput" type="text" id="deleteStudentName" placeholder="enter a student name to DELETE"></input></br>
+      <input id="deleteStudent" type="button" value="delete a student">
+    <br>
+       Assignment name:<input class="textInput" type="text" id="deleteAssignmentName" placeholder="enter an assignment to DELETE"></input></br>
+       <input id="deleteAssignment" type="button" value="delete an assignment">
+     </fieldset>
+      </form>
+      <br>
+      <h2>To edit an existing student, assignment, or score, simply click on the cell and enter your text!<br> <em>You MUST click outside of the box when you are done to make the changes!</em></h2>
+      <br>
+      <table id="table">
+        <tbody>
+        <tr>
+          <th class="students">Student <br> Name</th>
+          <th class="grades">Overall <br> Letter Grade</th>
+          <th class="grades" id="gradePercent">Grade <br> Percent</th>
         </tr>
-      </table>
+        </tbody>
+        </table>
+
   </content>
 <footer> &copy 2015 Craig Campbell </footer>
   <script src="/public/js/jquery-2.1.4.min.js"></script>
