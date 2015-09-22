@@ -1,57 +1,85 @@
 'use strict';
+
 $(document).ready(function(){
-  if (!(localStorage.getItem("totalPoints"))){
-    totalPointsPossible = 0;
-    localStorage.setItem("totalPoints", JSON.stringify(totalPointsPossible));
-  }
-  else{
-    totalPointsPossible = Number(localStorage.getItem("totalPoints"));
-  }
+  get(totalPointsID);
+  get(studentArrayID);
+  get(assignmentArrayID);
+  get(scoreArrayID);
 
-  if(!(localStorage.getItem("studentArray"))){
-    console.log("We ain't got no stored STUDENT data! Luckily, I just saved one for you!");
-    studentList = []
-    localStorage.setItem("studentArray", JSON.stringify(studentList));
-  }
-  else {
-    studentList = JSON.parse(localStorage.getItem("studentArray"))
-    studentList.forEach(function(current, index, array){
-      Object.setPrototypeOf(current, Student.prototype);
-    })
-
-  }
-
-  if(!(localStorage.getItem("assignmentArray"))){
-    console.log("We ain't got no stored ASSIGNMENT data! Luckily, I just saved one for you!");
-    assignmentList = [];
-    localStorage.setItem("assignmentArray", JSON.stringify(assignmentList));
-  }
-  else {
-    assignmentList = JSON.parse(localStorage.getItem("assignmentArray"))
-    assignmentList.forEach(function(current, index, array){
-      Object.setPrototypeOf(current, Assignment.prototype);
-    })
-  }
-
-  if(!(localStorage.getItem("scoreArray"))){
-    console.log("We ain't got no stored SCORE data! Luckily, I just saved one for you!");
-    scoreList = [];
-    localStorage.setItem("scoreArray", JSON.stringify(scoreList));
-  }
-  else {
-    scoreList = JSON.parse(localStorage.getItem("scoreArray"))
-    scoreList.forEach(function(current, index, array){
-      Object.setPrototypeOf(current, Score.prototype);
-    })
-  }
   alphabetizeStudents();
   renderStudents();
   renderAssignments();
   console.log("READY!!!!!")
+
+
 }) // end document.ready()
 
+var totalPointsID = '56005b32e4b0e6c040a24d34';
+var scoreArrayID = '56005b32e4b099d78856fee9';
+var studentArrayID = '56005b32e4b0e6c040a24d36';
+var assignmentArrayID = '56005b32e4b0e6c040a24d35';
 
-console.log('app.js file is being read');
+ /// GET data
+  function get(mongoID){
+    $.ajax({
+      url: 'https://api.mongolab.com/api/1/databases/gradebookproject/collections/myData/' + mongoID + '?apiKey=Q_MWxLPLxfonVusuXCHtaz6boo4vCKTN',
+
+      type: 'GET',
+      async: false,
+      contentType: 'application/json',
+      dataType: 'json',
+      success: function(){
+        console.log('Connected to MongoDB for GET')
+
+      }
+    })
+    .done(function(response){
+      console.dir(response)
+      if (mongoID === totalPointsID) {
+        totalPointsPossible = response.totalPoints;
+      }
+      else if (mongoID === scoreArrayID){
+        scoreList = response.scoreArray;
+      }
+      else if (mongoID === studentArrayID){
+        studentList = response.studentArray
+        studentList.forEach(function(current, index, array){
+          Object.setPrototypeOf(current, Student.prototype);
+        })
+      }
+      else if (mongoID === assignmentArrayID){
+        assignmentList = response.assignmentArray;
+        assignmentList.forEach(function(current, index, array){
+          Object.setPrototypeOf(current, Assignment.prototype);
+        })
+      }
+    })
+  }
+
+
+  /// POST data
+  function post(theData, mongoID){
+    $.ajax({
+      url: 'https://api.mongolab.com/api/1/databases/gradebookproject/collections/myData/' + mongoID + '?apiKey=Q_MWxLPLxfonVusuXCHtaz6boo4vCKTN',
+      data: JSON.stringify(theData),
+      type: "POST",
+      contentType: "application/json",
+      success: console.log('Connected to MongoDB for POST')
+
+    });
+  }
+
+
+  function put(theData, mongoID){
+    $.ajax({
+      url: 'https://api.mongolab.com/api/1/databases/gradebookproject/collections/myData/' + mongoID + '?apiKey=Q_MWxLPLxfonVusuXCHtaz6boo4vCKTN',
+      data: JSON.stringify( { "$set" : theData }),
+      type: "PUT",
+      contentType: "application/json",
+      success: console.log('Connected to MongoDB for PUT')
+    });
+  }
+
 var formerValue;
 var studentList;
 var assignmentList;
@@ -154,12 +182,13 @@ $('#addStudent').on('click', function(){
       renderStudents();
       renderAssignments();
 
-      localStorage.setItem("studentArray", JSON.stringify(studentList));
+      // localStorage.setItem("studentArray", JSON.stringify(studentList));
+      put({ "studentArray" : studentList}, studentArrayID);
       // JSON.parse(localStorage.getItem("studentArray"));
    }
 });
 
-function Assignment(assignmentName, points, score){
+function Assignment(assignmentName, points){
   this.assignmentName = assignmentName;
   this.points = points;
 }
@@ -168,8 +197,8 @@ Assignment.prototype.addAssignment = function(){
   if (assignmentList[0] === undefined){ //if list is empty
     assignmentList.unshift(this);
     totalPointsPossible += this.points
-    console.log(totalPointsPossible)
-    localStorage.setItem("totalPoints", JSON.stringify(totalPointsPossible));
+    // localStorage.setItem("totalPoints", JSON.stringify(totalPointsPossible));
+    put({ "totalPoints" : totalPointsPossible }, totalPointsID);
     console.log(assignmentList)
   }
   else { // otherwise the list has students. do the following:
@@ -185,8 +214,8 @@ Assignment.prototype.addAssignment = function(){
     if (!assignmentMatch) { // if no match for that student name, then put the student in the list
     assignmentList.unshift(this);
     totalPointsPossible += this.points
-    console.log(totalPointsPossible)
-    localStorage.setItem("totalPoints", JSON.stringify(totalPointsPossible));
+    // localStorage.setItem("totalPoints", JSON.stringify(totalPointsPossible));
+    put({ "totalPoints" : totalPointsPossible }, totalPointsID);
     console.log(assignmentList)
       }
   }
@@ -256,7 +285,8 @@ $('#addAssignment').on('click', function(){
     newAssignment.addAssignment();
     renderStudents();
     renderAssignments();
-    localStorage.setItem("assignmentArray", JSON.stringify(assignmentList));
+    // localStorage.setItem("assignmentArray", JSON.stringify(assignmentList));
+    put({ "assignmentArray" : assignmentList }, assignmentArrayID);
     // JSON.parse(localStorage.getItem("assignmentArray"));
   }
 });
@@ -304,11 +334,12 @@ function editCells(formerStudentText, formerAssignmentText){
             }
           }) //end forEach
         }
-          localStorage.setItem("assignmentArray", JSON.stringify(assignmentList));
-          assignmentList = JSON.parse(localStorage.getItem("assignmentArray"));
-          assignmentList.forEach(function(current, index, array){
-            Object.setPrototypeOf(current, Assignment.prototype);
-          })
+          // localStorage.setItem("assignmentArray", JSON.stringify(assignmentList));
+          put({ "assignmentArray" : assignmentList }, assignmentArrayID);
+          // assignmentList = JSON.parse(localStorage.getItem("assignmentArray"));
+          // assignmentList.forEach(function(current, index, array){
+          //   Object.setPrototypeOf(current, Assignment.prototype);
+          // })
 
 
           scoreList.forEach(function(current, index, array){
@@ -318,8 +349,9 @@ function editCells(formerStudentText, formerAssignmentText){
           })
 
 
-          localStorage.setItem("scoreArray", JSON.stringify(scoreList));
-          scoreList = JSON.parse(localStorage.getItem("scoreArray"));
+          // localStorage.setItem("scoreArray", JSON.stringify(scoreList));
+          put({ "scoreArray" : scoreList }, scoreArrayID);
+          // scoreList = JSON.parse(localStorage.getItem("scoreArray"));
           scoreList.forEach(function(current, index, array){
             Object.setPrototypeOf(current, Score.prototype);
           })
@@ -349,11 +381,12 @@ function editCells(formerStudentText, formerAssignmentText){
             }
           }) // end forEach
 
-          localStorage.setItem("studentArray", JSON.stringify(studentList));
-          studentList = JSON.parse(localStorage.getItem("studentArray"));
-          studentList.forEach(function(current, index, array){
-            Object.setPrototypeOf(current, Student.prototype);
-          })
+          // localStorage.setItem("studentArray", JSON.stringify(studentList));
+          put({ "studentArray" : studentList }, studentArrayID);
+          // studentList = JSON.parse(localStorage.getItem("studentArray"));
+          // studentList.forEach(function(current, index, array){
+          //   Object.setPrototypeOf(current, Student.prototype);
+          // })
 
           scoreList.forEach(function(current, index, array){
             if (current.scoreName.slice(0, formerStudentText.length) === formerStudentText ){  // if the first part of the scoreName matches the name of teh studetn who was JUST changed (the old name not the new one), then replace the first part of scoreName with the NEW name
@@ -361,14 +394,15 @@ function editCells(formerStudentText, formerAssignmentText){
             }
           })
 
-          localStorage.setItem("scoreArray", JSON.stringify(scoreList));
-          scoreList = JSON.parse(localStorage.getItem("scoreArray"));
-          scoreList.forEach(function(current, index, array){
-            Object.setPrototypeOf(current, Score.prototype);
-          })
+          // localStorage.setItem("scoreArray", JSON.stringify(scoreList));
+          put({ "scoreArray" : scoreList }, scoreArrayID);
+          // scoreList = JSON.parse(localStorage.getItem("scoreArray"));
+          // scoreList.forEach(function(current, index, array){
+          //   Object.setPrototypeOf(current, Score.prototype);
+          // })
 
-          console.log("studentlist is now: " , studentList);
-          console.log("scorelist: ", scoreList);
+          // console.log("studentlist is now: " , studentList);
+          // console.log("scorelist: ", scoreList);
         }
         $('.clicked').attr('class', 'editable student'); //make the table cell editable again
       } // end if student
@@ -402,7 +436,7 @@ function editCells(formerStudentText, formerAssignmentText){
         })
 
         if ($('.clicked').is($('#' + formerStudentText + formerAssignmentText))) {
-          console.log("OK!!!!!!!!!!!!!!!!!!")
+          // console.log("OK!!!!!!!!!!!!!!!!!!")
           scoreList.forEach(function(current, index, array){
             console.log($('.clicked').attr('id'))
             if (current.scoreName === $('.clicked').attr('id')) {
@@ -412,16 +446,18 @@ function editCells(formerStudentText, formerAssignmentText){
 
           })
         }
-        localStorage.setItem("scoreArray", JSON.stringify(scoreList));
-        scoreList = JSON.parse(localStorage.getItem("scoreArray"));
-        scoreList.forEach(function(current, index, array){
-          Object.setPrototypeOf(current, Score.prototype);
-        })
-        localStorage.setItem("studentArray", JSON.stringify(studentList));
-        studentList = JSON.parse(localStorage.getItem("studentArray"));
-        studentList.forEach(function(current, index, array){
-            Object.setPrototypeOf(current, Student.prototype);
-          })
+        // localStorage.setItem("scoreArray", JSON.stringify(scoreList));
+        put({ "scoreArray" : scoreList }, scoreArrayID);
+        // scoreList = JSON.parse(localStorage.getItem("scoreArray"));
+        // scoreList.forEach(function(current, index, array){
+        //   Object.setPrototypeOf(current, Score.prototype);
+        // })
+        // localStorage.setItem("studentArray", JSON.stringify(studentList));
+        put({ "studentArray" : studentList }, studentArrayID);
+        // studentList = JSON.parse(localStorage.getItem("studentArray"));
+        // studentList.forEach(function(current, index, array){
+        //     Object.setPrototypeOf(current, Student.prototype);
+        //   })
 
         $('.clicked').attr('class', 'editable score'); //remove the clicked class
       }
