@@ -1,19 +1,25 @@
 'use strict';
 
 $(document).ready(function(){
-  get(totalPointsID);
-  get(studentArrayID);
-  get(assignmentArrayID);
-  get(scoreArrayID);
-
-  alphabetizeStudents();
-  renderStudents();
-  renderAssignments();
-  console.log("READY!!!!!")
-
+  // first try getting these data stored in the mongo database...
+    getCounter = 0;
+    get(totalPointsID);
+    get(studentArrayID);
+    get(assignmentArrayID);
+    get(scoreArrayID);
 
 }) // end document.ready()
 
+function checkGetCounter() {  // runs after each of the get() calls.  Must have all 4 get calls done initially in order for these functions to work properly
+
+  if (getCounter === 4){ // once all 4 get requests have received a response...
+    alphabetizeStudents();
+    renderStudents();
+    renderAssignments();
+    console.log("READY!!!!!")
+  }
+}
+var getCounter;
 var totalPointsID = '56005b32e4b0e6c040a24d34';
 var scoreArrayID = '56005b32e4b099d78856fee9';
 var studentArrayID = '56005b32e4b0e6c040a24d36';
@@ -25,7 +31,6 @@ var assignmentArrayID = '56005b32e4b0e6c040a24d35';
       url: 'https://api.mongolab.com/api/1/databases/gradebookproject/collections/myData/' + mongoID + '?apiKey=Q_MWxLPLxfonVusuXCHtaz6boo4vCKTN',
 
       type: 'GET',
-      async: false,
       contentType: 'application/json',
       dataType: 'json',
       success: function(){
@@ -37,36 +42,47 @@ var assignmentArrayID = '56005b32e4b0e6c040a24d35';
       console.dir(response)
       if (mongoID === totalPointsID) {
         totalPointsPossible = response.totalPoints;
+        if (totalPointsPossible === undefined){
+          totalPointsPossible = 0;
+          put({"totalPoints" : totalPointsPossible }, totalPointsID);  //NOT POST because the db file is already there. It is just being updated.
+        }
+        getCounter ++
+        checkGetCounter()
       }
       else if (mongoID === scoreArrayID){
         scoreList = response.scoreArray;
+        if (scoreList === undefined){
+          scoreList = [];
+          put({"scoreArray" : scoreList }, scoreArrayID);
+        }
+        getCounter ++
+        checkGetCounter()
       }
       else if (mongoID === studentArrayID){
         studentList = response.studentArray
+        if (studentList === undefined){
+          studentList = [];
+          put({"studentArray" : studentList }, studentArrayID);
+        }
         studentList.forEach(function(current, index, array){
           Object.setPrototypeOf(current, Student.prototype);
         })
+        getCounter ++;
+        checkGetCounter()
       }
       else if (mongoID === assignmentArrayID){
         assignmentList = response.assignmentArray;
+        if (assignmentList === undefined){
+          assignmentList = [];
+          put({"assignmentArray" : assignmentList }, assignmentArrayID);
+        }
         assignmentList.forEach(function(current, index, array){
           Object.setPrototypeOf(current, Assignment.prototype);
         })
+        getCounter ++;
+        checkGetCounter()
       }
     })
-  }
-
-
-  /// POST data
-  function post(theData, mongoID){
-    $.ajax({
-      url: 'https://api.mongolab.com/api/1/databases/gradebookproject/collections/myData/' + mongoID + '?apiKey=Q_MWxLPLxfonVusuXCHtaz6boo4vCKTN',
-      data: JSON.stringify(theData),
-      type: "POST",
-      contentType: "application/json",
-      success: console.log('Connected to MongoDB for POST')
-
-    });
   }
 
 
@@ -175,16 +191,10 @@ $('#addStudent').on('click', function(){
 
       var newStudent = new Student(properCapitalization);
       newStudent.addStudent();
-
-      // console.log(studentList[0].studentName)
-      alphabetizeStudents();// alphabetize list of students (in case changes were made to student names)
-
+      alphabetizeStudents();
       renderStudents();
       renderAssignments();
-
-      // localStorage.setItem("studentArray", JSON.stringify(studentList));
-      put({ "studentArray" : studentList}, studentArrayID);
-      // JSON.parse(localStorage.getItem("studentArray"));
+      put({ "studentArray" : studentList }, studentArrayID);
    }
 });
 
@@ -197,11 +207,10 @@ Assignment.prototype.addAssignment = function(){
   if (assignmentList[0] === undefined){ //if list is empty
     assignmentList.unshift(this);
     totalPointsPossible += this.points
-    // localStorage.setItem("totalPoints", JSON.stringify(totalPointsPossible));
+    put({ "assignmentArray" : assignmentList }, assignmentArrayID);
     put({ "totalPoints" : totalPointsPossible }, totalPointsID);
-    console.log(assignmentList)
   }
-  else { // otherwise the list has students. do the following:
+  else { // otherwise the list has assignments. do the following:
     var storedAssignmentName = this.assignmentName;
     var storedAssignmentObject = this;
     var assignmentMatch = false;
@@ -211,12 +220,11 @@ Assignment.prototype.addAssignment = function(){
         assignmentMatch = true;
       }
     }) // end forEach
-    if (!assignmentMatch) { // if no match for that student name, then put the student in the list
+    if (!assignmentMatch) { // if no match for that assignment name, then put the assignment in the list
     assignmentList.unshift(this);
+    put({ "assignmentArray" : assignmentList }, assignmentArrayID);
     totalPointsPossible += this.points
-    // localStorage.setItem("totalPoints", JSON.stringify(totalPointsPossible));
     put({ "totalPoints" : totalPointsPossible }, totalPointsID);
-    console.log(assignmentList)
       }
   }
 }
@@ -229,7 +237,7 @@ function renderAssignments(){
 
   for (var i = 0; i < assignmentList.length; i++){ // go through assingment list
     for (var j = 0; j < studentList.length; j++) { // for EACH assignment, go through student list and make a new TD with student-assignment id
-      if (scoreList[0] !== undefined) { // it there are score objects in the score array already, then go through the k loop
+      if (scoreList[0] !== undefined) { // if there are score objects in the score array already, then go through the k loop
         for (var k = 0; k < scoreList.length; k++){
           scoreYet = false;
           if (scoreList[k].scoreName.slice(0, -assignmentList[i].assignmentName.length) === studentList[j].studentName && scoreList[k].scoreName.slice(studentList[j].studentName.length) === assignmentList[i].assignmentName){
@@ -266,7 +274,7 @@ function renderAssignments(){
     } // end j loop  (move on to next assignemnt to render)
 
 
-    $('#gradePercent').after('<th class="editable assignment" id=' + assignmentList[i].assignmentName +'>' + assignmentList[i].assignmentName + '<br><table><tr><td class="editable assignmentPoints" id="points' + assignmentList[i].assignmentName + '">' + assignmentList[i].points +' pts</td></tr></table></th>'); //put put new table header  with assignemnt name after the  grade percent column (newest assignment to the left, older ones pushed to the right)
+    $('#gradePercent').after('<th class="editable assignment" id=' + assignmentList[i].assignmentName +'>' + assignmentList[i].assignmentName + '<br><table><tr><td class="editable assignmentPoints" id="points' + assignmentList[i].assignmentName + '">' + assignmentList[i].points +' pts</td></tr></table></th>'); //put put new table header  with assignemnt name after the  grade percent column
   } // end i loop
 
 }
@@ -281,22 +289,18 @@ $('#addAssignment').on('click', function(){
     var originalInput = $('#assignmentName').val()
     var properCapitalization = originalInput.slice(0,1).toUpperCase() + originalInput.slice(1).toLowerCase(); //makes 1st letter capitalized, and rest lowercase regardless of input capitalization; this will be important for alphabetizing as ASCII numbers for lowercase "a" is actually HIGHER than for uppercase "Z", and my method of comparing compares ASCII values
     var pointValue = Number($('#pointValue').val());
-    var newAssignment = new Assignment(properCapitalization, pointValue, 0);
+    var newAssignment = new Assignment(properCapitalization, pointValue);
     newAssignment.addAssignment();
     renderStudents();
     renderAssignments();
-    // localStorage.setItem("assignmentArray", JSON.stringify(assignmentList));
-    put({ "assignmentArray" : assignmentList }, assignmentArrayID);
-    // JSON.parse(localStorage.getItem("assignmentArray"));
+    // put({ "assignmentArray" : assignmentList }, assignmentArrayID); // already done in the addAssignment() call
+
   }
 });
 
 
 function editCells(formerStudentText, formerAssignmentText){
-
-
-  found = false;
-  // used for seing if students or assignments have been duplicated
+  found = false;  // used for seing if students or assignments have been duplicated
 
   $('.clicked').text(''); // clear the old text
   $('<input>').attr({ type: 'text', id: 'editing'}).appendTo('.clicked'); // insert a text input box
@@ -329,14 +333,11 @@ function editCells(formerStudentText, formerAssignmentText){
 
             if (current.assignmentName === formerAssignmentText){
               assignmentList[index].assignmentName = editValue //then replace that index value with the new ones
-              console.log("assignment list is now: ");
-              console.log(assignmentList);
+
             }
           }) //end forEach
         }
-          // localStorage.setItem("assignmentArray", JSON.stringify(assignmentList));
           put({ "assignmentArray" : assignmentList }, assignmentArrayID);
-          // assignmentList = JSON.parse(localStorage.getItem("assignmentArray"));
           // assignmentList.forEach(function(current, index, array){
           //   Object.setPrototypeOf(current, Assignment.prototype);
           // })
@@ -348,13 +349,10 @@ function editCells(formerStudentText, formerAssignmentText){
             }
           })
 
-
-          // localStorage.setItem("scoreArray", JSON.stringify(scoreList));
           put({ "scoreArray" : scoreList }, scoreArrayID);
-          // scoreList = JSON.parse(localStorage.getItem("scoreArray"));
-          scoreList.forEach(function(current, index, array){
-            Object.setPrototypeOf(current, Score.prototype);
-          })
+          // scoreList.forEach(function(current, index, array){
+          //   Object.setPrototypeOf(current, Score.prototype);
+          // })
 
         $('.clicked').removeClass('clicked'); //remove clicked class
       } // end if assignment
@@ -368,12 +366,11 @@ function editCells(formerStudentText, formerAssignmentText){
         studentList.forEach(function(current, index, array){
           if (current.studentName === editValue){ //if this new edited value   WAS already in the student list then don't change anything! make it its original value. no duplicates!
             console.log("that was already in the list! So we're not changing anything!")
-            found = true;
+            found = true;  // if any of them match, then the found state will be "true"
           }
         }) //end forEach
 
         if (found === false) {
-          console.log("ok new name!")
           // if it was NOT already there, then change the student name and list by CHANGING the studentName on that object that USED TO match the clicked cell's name
           studentList.forEach(function(current, index, array){
             if (current.studentName === formerStudentText) { // find the student name that matches the old text of the clicked cell
@@ -381,9 +378,7 @@ function editCells(formerStudentText, formerAssignmentText){
             }
           }) // end forEach
 
-          // localStorage.setItem("studentArray", JSON.stringify(studentList));
           put({ "studentArray" : studentList }, studentArrayID);
-          // studentList = JSON.parse(localStorage.getItem("studentArray"));
           // studentList.forEach(function(current, index, array){
           //   Object.setPrototypeOf(current, Student.prototype);
           // })
@@ -394,15 +389,10 @@ function editCells(formerStudentText, formerAssignmentText){
             }
           })
 
-          // localStorage.setItem("scoreArray", JSON.stringify(scoreList));
           put({ "scoreArray" : scoreList }, scoreArrayID);
-          // scoreList = JSON.parse(localStorage.getItem("scoreArray"));
           // scoreList.forEach(function(current, index, array){
           //   Object.setPrototypeOf(current, Score.prototype);
           // })
-
-          // console.log("studentlist is now: " , studentList);
-          // console.log("scorelist: ", scoreList);
         }
         $('.clicked').attr('class', 'editable student'); //make the table cell editable again
       } // end if student
@@ -436,7 +426,6 @@ function editCells(formerStudentText, formerAssignmentText){
         })
 
         if ($('.clicked').is($('#' + formerStudentText + formerAssignmentText))) {
-          // console.log("OK!!!!!!!!!!!!!!!!!!")
           scoreList.forEach(function(current, index, array){
             console.log($('.clicked').attr('id'))
             if (current.scoreName === $('.clicked').attr('id')) {
@@ -446,9 +435,8 @@ function editCells(formerStudentText, formerAssignmentText){
 
           })
         }
-        // localStorage.setItem("scoreArray", JSON.stringify(scoreList));
+
         put({ "scoreArray" : scoreList }, scoreArrayID);
-        // scoreList = JSON.parse(localStorage.getItem("scoreArray"));
         // scoreList.forEach(function(current, index, array){
         //   Object.setPrototypeOf(current, Score.prototype);
         // })
@@ -462,7 +450,7 @@ function editCells(formerStudentText, formerAssignmentText){
         $('.clicked').attr('class', 'editable score'); //remove the clicked class
       }
       $('#editing').remove(); //remove the text input box
-      alphabetizeStudents();  // alphabetize list of students (in case changes were made to student names)
+      alphabetizeStudents();
       renderStudents();
       renderAssignments();
     }
@@ -480,17 +468,17 @@ $('table').on('click', '.editable',  function(){
   if ($(this).is('.student')) {
     console.log("STUDENT!")
     storedName = $(this).text();
+    storedAssignment = null;
   }
   else if ($(this).is('.assignment')){
     console.log("ASSIGNMENT!")
-    // storedName = $(this).attr('id');
+    storedName = null;
     storedAssignment = $(this).attr('id');
   }
   else if ($(this).is('.score')) {
     console.log("SCORE!");
     storedName = $(this).siblings(':first').attr('id');
     storedAssignment =  $(this).attr('id').slice(storedName.length);
-    console.log("stored assignment: " + storedAssignment)
 
     if (Number($(this).text()) !== NaN){
       pointsToRemove  = Number($(this).text());  //subract off the points in the cell FIRST so the score can be lowered to a new value if needed. otherwise it just gets bigger every time
@@ -500,13 +488,13 @@ $('table').on('click', '.editable',  function(){
     }
     var newScore = new Score(storedName + storedAssignment , 0);
     scoreList.push(newScore);
+    put({ "scoreArray" : scoreList }, scoreArrayID);
+
   }
 
   else {
     console.log("neither assignment nor student nor score")
   }
-
-  console.log("stored name: " + storedName)
   $(this).addClass('clicked');
   editCells(storedName, storedAssignment);
 
