@@ -6,7 +6,7 @@ var path = require('path');
 var port = 5000;
 var hostUrl = '127.0.0.1';
 
-function getContentType(req){ // should just take a req object as parameter, do the extraction of hte extname inside this function
+function getContentType(req){
   var extname = path.extname(req.url);
   if (extname === '.html'){
     return 'text/html';
