@@ -6,6 +6,19 @@ var path = require('path');
 var port = 5000;
 var hostUrl = '127.0.0.1';
 
+function getContentType(req){
+  var extname = path.extname(req.url);
+  if (extname === '.html'){
+    return 'text/html';
+  }
+  if (extname === '.css') {
+    return  'text/css';
+  }
+  if (extname === '.js') {
+    return 'application/javascript';
+  }
+}
+
 var svr = http.createServer(function(req, res){
   if (req.url === '/') {
     req.url = '/public/index.html'
@@ -18,18 +31,11 @@ var svr = http.createServer(function(req, res){
       res.writeHead(404);
       res.end("404 - we ain't finding no such file!");
     }
-    if (path.extname(req.url) === '.html') {
-      res.writeHead(200, {'Content-Type': 'text/html'})
-    }
-    if (path.extname(req.url) === '.js') {
-      res.writeHead(200, {'Content-Type': 'application/javascript'})
-    }
-    if (path.extname(req.url) === '.css') {
-      res.writeHead(200, {'Content-Type': 'text/css'})
-    }
+    res.writeHead(200, {'Content-Type': getContentType(req)})
     res.end(data, 'utf-8');
   })
 }).listen(port, hostUrl, function() {
   console.log('server is listening @ ' + hostUrl + ':' + port);
 });
+
 
