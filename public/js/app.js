@@ -507,6 +507,7 @@ function deleteStudent(studentName){
     if (current.studentName === studentName) {
       console.log("it was in the list already. Let's delete it!");
       studentList.splice(index, 1);
+      put({ "studentArray" : studentList }, studentArrayID);
       found = true;
       }
   })
@@ -535,7 +536,8 @@ function deleteAssignment(assignmentName){
     if (current.assignmentName === assignmentName) {
       console.log("it was in the list already. Let's delete it!");
       console.log(assignmentList)
-      var spliced = assignmentList.splice(index, 1);
+      assignmentList.splice(index, 1);
+      put({ "assignmentArray" : assignmentList }, assignmentArrayID);
       found = true;
     }
     else {
