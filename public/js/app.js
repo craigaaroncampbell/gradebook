@@ -11,21 +11,25 @@ var pointsToAdd;
 var pointsToRemove;
 var getCounter;
 
-function get(mongoID){
-  function checkGetCounter() {  // runs after each of the get() calls.  Must have all 4 get calls done initially in order for these functions to work properly
-    if (getCounter === undefined) {
-      getCounter = 1;
-    }
-    else {
-      getCounter ++;
-    }
-    if (getCounter === 4){ // once all 4 get requests have received a response...
-      alphabetizeStudents();
-      renderStudents();
-      renderAssignments();
-    }
-  }
+function renderAll(){
+  alphabetizeStudents();
+  renderStudents();
+  renderAssignments();
+}
 
+function checkGetCounter() {  // runs after each of the get() calls.  Must have all 4 get calls done initially in order for these functions to work properly
+  if (getCounter === undefined) {
+    getCounter = 1;
+  }
+  else {
+    getCounter ++;
+  }
+  if (getCounter === 4){ // once all 4 get requests have received a response...
+    renderAll();
+  }
+}
+
+function get(mongoID){
   $.ajax({
     url: 'https://api.mongolab.com/api/1/databases/gradebookproject/collections/myData/' + mongoID + '?apiKey=Q_MWxLPLxfonVusuXCHtaz6boo4vCKTN',
 
@@ -34,7 +38,6 @@ function get(mongoID){
     dataType: 'json',
     success: function(){
       console.log('Connected to MongoDB for GET')
-
     }
   })
   .done(function(response){
@@ -49,14 +52,14 @@ function get(mongoID){
       scoreList = response.scoreArray;
       if (scoreList === undefined){
         scoreList = [];
-        put({"scoreArray" : scoreList }, scoreArrayID);
+        put({"scoreArray" : scoreList }, mongoID);
       }
     }
     else if (mongoID === studentArrayID){
       studentList = response.studentArray
       if (studentList === undefined){
         studentList = [];
-        put({"studentArray" : studentList }, studentArrayID);
+        put({"studentArray" : studentList }, mongoID);
       }
       studentList.forEach(function(current, index, array){
         Object.setPrototypeOf(current, Student.prototype);
@@ -66,7 +69,7 @@ function get(mongoID){
       assignmentList = response.assignmentArray;
       if (assignmentList === undefined){
         assignmentList = [];
-        put({"assignmentArray" : assignmentList }, assignmentArrayID);
+        put({"assignmentArray" : assignmentList }, mongoID);
       }
       assignmentList.forEach(function(current, index, array){
         Object.setPrototypeOf(current, Assignment.prototype);
@@ -96,62 +99,49 @@ function Student(studentName){
   this.totalScore = 0;
 }
 
-Student.prototype.addPoints = function(){
-   this.totalScore += pointsToAdd;
-}
-
-Student.prototype.removePoints = function(){
-    this.totalScore -= pointsToRemove;
-}
-
-
-Student.prototype.getPercentScore = function(){
- this.percentGrade = ((this.totalScore / totalPointsPossible) * 100).toFixed(2);
-}
-
-Student.prototype.getLetterGrade = function() {
-  if (this.percentGrade >= 90){this.letterGrade = "A";}
-  else if (this.percentGrade >= 80){this.letterGrade = "B";}
-  else if (this.percentGrade >= 70){this.letterGrade = "C";}
-  else if (this.percentGrade >= 60){this.letterGrade = "D";}
-  else if (this.percentGrade < 60){this.letterGrade = "F";}
-  else {this.letterGrade = "Houston, we have a problem.";}
-}
-
-Student.prototype.addStudent = function(){  // adds student to studentList
-  var studentMatch = false;
-  var storedStudentName = this.studentName;
-  var storedStudentObject = this;
-  studentList.forEach(function(current, index, array){
-    if (current.studentName === storedStudentName) {
-      console.log("we got a match for " + storedStudentName );
-      studentMatch = true; //if student is already in list then change studentMatch to true
-    }
-  }) // end forEach
-  if (!studentMatch) { // if no match, then add to list and update database
-    studentList.unshift(storedStudentObject);
-    put({ "studentArray" : studentList }, studentArrayID);
-  }
-}
-
-function renderStudents(){
-  $('tr').find('.student').parent().remove(); //remove ALL tr with student class children
-  for (var i = 0; i < studentList.length; i++){
-    studentList[i].getPercentScore();
-    studentList[i].getLetterGrade();
-
-    $('#table').append('<tr><td class="editable student students" id="'  + studentList[i].studentName + '">' + studentList[i].studentName + '</td> <td class="grade grades" id="letterGrade' + studentList[i].studentName+'">' + studentList[i].letterGrade + '</td> <td class ="grade grades" id="percentGrade'+ studentList[i].studentName +'">' + studentList[i].percentGrade + ' %</td></tr>');
-  }
-}
-
-function properCapitalization(input){
-  return input.slice(0,1).toUpperCase() + input.slice(1).toLowerCase();
-} //makes 1st letter capitalized, and rest lowercase regardless of input capitalization; this will be important for alphabetizing as ASCII numbers for lowercase "a" is actually HIGHER than for uppercase "Z", and my method of comparing compares ASCII values
-
 function Assignment(assignmentName, points){
   this.assignmentName = assignmentName;
   this.points = points;
 }
+
+(function(){ // add methods to Student.prototype
+  this.addPoints = function(){
+     this.totalScore += pointsToAdd;
+  }
+
+  this.removePoints = function(){
+      this.totalScore -= pointsToRemove;
+  }
+
+  this.getPercentScore = function(){
+   this.percentGrade = ((this.totalScore / totalPointsPossible) * 100).toFixed(2);
+  }
+
+  this.getLetterGrade = function() {
+    if (this.percentGrade >= 90){this.letterGrade = "A";}
+    else if (this.percentGrade >= 80){this.letterGrade = "B";}
+    else if (this.percentGrade >= 70){this.letterGrade = "C";}
+    else if (this.percentGrade >= 60){this.letterGrade = "D";}
+    else if (this.percentGrade < 60){this.letterGrade = "F";}
+    else {this.letterGrade = "Houston, we have a problem.";}
+  }
+
+  this.addStudent = function(){  // adds student to studentList
+    var studentMatch = false;
+    var storedStudentName = this.studentName;
+    var storedStudentObject = this;
+    studentList.forEach(function(current, index, array){
+      if (current.studentName === storedStudentName) {
+        console.log("we got a match for " + storedStudentName );
+        studentMatch = true; //if student is already in list then change studentMatch to true
+      }
+    }) // end forEach
+    if (!studentMatch) { // if no match, then add to list and update database
+      studentList.unshift(storedStudentObject);
+      put({ "studentArray" : studentList }, studentArrayID);
+    }
+  }
+}).call(Student.prototype);
 
 Assignment.prototype.addAssignment = function(){
   var assignmentMatch = false; //first assume the new assignment is NOT in the list already
@@ -169,23 +159,35 @@ Assignment.prototype.addAssignment = function(){
     put({ "assignmentArray" : assignmentList }, assignmentArrayID);
     put({ "totalPoints" : totalPointsPossible }, totalPointsID);
     }
+};
+
+function properCapitalization(input){
+  return input.slice(0,1).toUpperCase() + input.slice(1).toLowerCase();
+} //makes 1st letter capitalized, and rest lowercase regardless of input capitalization; this will be important for alphabetizing as ASCII numbers for lowercase "a" is actually HIGHER than for uppercase "Z", and my method of comparing compares ASCII values
+
+function renderStudents(){
+  $('tr').find('.student').parent().remove(); //remove ALL tr with student class children
+  for (var i = 0; i < studentList.length; i++){
+    studentList[i].getPercentScore();
+    studentList[i].getLetterGrade();
+
+    $('#table').append('<tr><td class="editable student students" id="'  + studentList[i].studentName + '">' + studentList[i].studentName + '</td> <td class="grade grades" id="letterGrade' + studentList[i].studentName+'">' + studentList[i].letterGrade + '</td> <td class ="grade grades" id="percentGrade'+ studentList[i].studentName +'">' + studentList[i].percentGrade + ' %</td></tr>');
+  }
 }
 
 function renderAssignments(){
-  var scoreYet;
-  var id;
-  var placeholder = '';
+  var scoreYet, id, nameOfStudent, placeholder, i, j, k;
   $('.assignment').remove();
-  for (var i = 0; i < assignmentList.length; i++){ // go through assingment list
-    for (var j = 0; j < studentList.length; j++) { // for EACH assignment, go through student list and make a new TD with student-assignment id
+  for (i = 0; i < assignmentList.length; i++){ // go through assingment list
+    for (j = 0; j < studentList.length; j++) { // for EACH assignment, go through student list and make a new TD with student-assignment id
       if (scoreList[0] !== undefined) { // if there are score objects in the score array already, then go through the k loop
-        for (var k = 0; k < scoreList.length; k++){
+        for (k = 0; k < scoreList.length; k++){
           scoreYet = false;
           if (scoreList[k].scoreName.slice(0, -assignmentList[i].assignmentName.length) === studentList[j].studentName && scoreList[k].scoreName.slice(studentList[j].studentName.length) === assignmentList[i].assignmentName){
             if (scoreList[0]!== undefined){
               placeholder = scoreList[k].score
             }
-            var nameOfStudent = studentList[j].studentName
+            nameOfStudent = studentList[j].studentName
             id = nameOfStudent + assignmentList[i].assignmentName
             $('#percentGrade' + nameOfStudent).after('<td class="editable score" id="'+ id + '">'  + placeholder + '</td>'); // render assignment score box with unique id for student/assignment combo
             scoreYet = true;
@@ -201,7 +203,7 @@ function renderAssignments(){
       }
       if (scoreYet === false){
           placeholder = '';
-          var nameOfStudent = studentList[j].studentName
+          nameOfStudent = studentList[j].studentName
           id = nameOfStudent + assignmentList[i].assignmentName
           $('#percentGrade' + nameOfStudent).after('<td class="editable score" id="'+ id + '">'  + placeholder + '</td>'); // render an empty assignment score box with unique id for student/assignment combo (only if there wasn't a score object found to match )
       } // ok now go on to the next student and run though the k loop again
@@ -235,12 +237,9 @@ function editCells(formerStudentText, formerAssignmentText){
         }) // end for Each
 
         if (found === false) {  // if it was NOT already there, then change the assignment name and list
-
           assignmentList.forEach(function(current, index, array){
-
             if (current.assignmentName === formerAssignmentText){
               assignmentList[index].assignmentName = editValue //then replace that index value with the new ones
-
             }
           }) //end forEach
         }
@@ -321,23 +320,16 @@ function editCells(formerStudentText, formerAssignmentText){
         $('.clicked').attr('class', 'editable score'); //remove the clicked class
       }
       $('#editing').remove(); //remove the text input box
-      alphabetizeStudents();
-      renderStudents();
-      renderAssignments();
+      renderAll();
     }
     else{
-      renderStudents();
-      renderAssignments();
+      renderAll();
     }
   }); // end on.blur
 }
 
 function deleteObject(name, type){
-  var found = false;
-  var objectName;
-  var objectList;
-  var storageArray;
-  var arrayID;
+  var found = false, objectName, objectList;
 
   if (type === "student"){
     objectName = studentName;
@@ -351,24 +343,30 @@ function deleteObject(name, type){
   objectList.forEach(function(current, index, array){
     if (current.studentName === name || current.assignmentName === name) {
       objectList.splice(index, 1);
-      put({  "studentArray" : studentList }, studentArrayID);
-      put({  "assignmentArray" : assignmentList }, assignmentArrayID);
-      put({  "scoreArray" : scoreList }, scoreArrayID);
-      put({  "totalPoints" : totalPointsPossible }, totalPointsID);
       found = true;
     }
   })
-  if (!found){  console.log("couldn't find it, so I can't delete it!")
+  if (found){
+    if (type === "student") {
+      put({  "studentArray" : studentList }, studentArrayID);
+    }
+    else if (type === "assignment"){
+      put({  "assignmentArray" : assignmentList }, assignmentArrayID);
+    }
+
+    // put({  "scoreArray" : scoreList }, scoreArrayID);
+    // put({  "totalPoints" : totalPointsPossible }, totalPointsID);
+  }
+  else{  console.log("couldn't find it, so I can't delete it!")
   }
 }
 
 function alphabetizeStudents(){
   if (studentList.length > 1){
-    var higherAlphabet;
-    var lowerAlphabet;
+    var higherAlphabet, lowerAlphabet, i, changeCounter;
     while (true){
-      var changeCounter = 0;
-      for (var i = 0; i < studentList.length - 1 ; i++){ // length-1 becasue we do the last comparison on the next-to-last index
+      changeCounter = 0;
+      for (i = 0; i < studentList.length - 1 ; i++){ // length-1 becasue we do the last comparison on the next-to-last index
         if (studentList[i+1].studentName < studentList[i].studentName){ //if 2 consecutive students are NOT in alphabetical order then...
           higherAlphabet = studentList[i];  //store the higher value
           lowerAlphabet = studentList[i+1]; //store the lower value
@@ -395,24 +393,20 @@ function main(){
       console.log("Nothing to add! Enter a new student name!");
     }
     else {
-      var newStudent = new Student(properCapitalization($('#studentName').val()));
-      newStudent.addStudent();
-      alphabetizeStudents();
-      renderStudents();
-      renderAssignments();
+      new Student(properCapitalization($('#studentName').val())).addStudent();
+      renderAll();
     }
   });
 
   $('#addAssignment').on('click', function(){
-    if ($('#assignmentName').val() === '') { //check if there is text in the input field
-    console.log("nothing to add!")
+    var pointValue = Number($('#pointValue').val());
+    /*    /^\d+$/  this regex should mean "starting with at least one digit and continuously only having digits until the end"   (so no neatives or decimals or non-numbers)   */
+    if ($('#assignmentName').val() !== '' && /^\d+$/.test(pointValue))  { //check if there is text in the input field and that the point field is actualy digits greater than 0 and it is a whole number
+      new Assignment(properCapitalization($('#assignmentName').val()), pointValue).addAssignment(); //put new assignment in assignmentList
+      renderAll();
     }
     else {
-      var pointValue = Number($('#pointValue').val());
-      var newAssignment = new Assignment(properCapitalization($('#assignmentName').val()), pointValue);
-      newAssignment.addAssignment();
-      renderStudents();
-      renderAssignments();
+      console.log("make sure the fields are not blank and that the points value is a positive whole number")
     }
   });
 
@@ -422,8 +416,7 @@ function main(){
     }
     else {
      deleteObject(properCapitalization($('#deleteStudentName').val()), "student"); // search studentList for the object and remove it.
-     renderStudents();
-     renderAssignments();
+     renderAll();
     }
   });
 
@@ -433,35 +426,25 @@ function main(){
     }
     else {
      deleteObject(properCapitalization($('#deleteAssignmentName').val()), "assignment"); // search assignmentList for the object and remove it.
-     renderStudents();
-     renderAssignments();
+     renderAll();
     }
   });
 
   $('table').on('click', '.editable',  function(){
-    var storedAssignment;
-    var storedName;
+    var storedAssignment, storedName;
     if ($(this).is('.student')) {
-      console.log("STUDENT!")
       storedName = $(this).text();
       storedAssignment = null;
     }
     if ($(this).is('.assignment')){
-      console.log("ASSIGNMENT!")
       storedName = null;
       storedAssignment = $(this).attr('id');
     }
     if ($(this).is('.score')) {
       storedName = $(this).siblings(':first').attr('id');
       storedAssignment =  $(this).attr('id').slice(storedName.length);
-      if (Number($(this).text()) !== NaN){
-        pointsToRemove  = Number($(this).text());  //subract off the points in the cell FIRST so the score can be lowered to a new value if needed. otherwise it just gets bigger every time
-      }
-      else{
-        pointsToRemove = 0;
-      }
-      var newScore = new Score(storedName + storedAssignment , 0);
-      scoreList.push(newScore);
+      pointsToRemove  = Number($(this).text());  //subract off the points in the cell FIRST so the score can be lowered to a new value if needed. If the cell is blank then that's ok because Number(emptyString) === 0
+      scoreList.push(new Score(storedName + storedAssignment , 0));
       put({ "scoreArray" : scoreList }, scoreArrayID);
     }
     $(this).addClass('clicked');
