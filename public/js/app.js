@@ -10,6 +10,11 @@ var scoreList;
 var pointsToAdd;
 var pointsToRemove;
 var getCounter;
+var putPlaceholder;
+var placeholderID;
+var objectName;
+var objectList;
+var myObject;
 
 function renderAll(){
   alphabetizeStudents();
@@ -42,37 +47,52 @@ function get(mongoID){
   })
   .done(function(response){
     if (mongoID === totalPointsID) {
+      myObject = null // so we don't use forEach
       totalPointsPossible = response.totalPoints;
       if (totalPointsPossible === undefined){
         totalPointsPossible = 0;
-        put({"totalPoints" : totalPointsPossible }, totalPointsID);  //NOT POST because the db file is already there. It is just being updated.
+        putPlaceholder = {"totalPoints" : totalPointsPossible };
+        objectList = []; // only needed to trigger the put() call later
+      }
+      else {
+        objectList = [totalPointsPossible] // just filler so we don't send a PUT request every time  (otherwise would not have the else block and would just have objectList = [] in the main if block)
       }
     }
-    else if (mongoID === scoreArrayID){
+    if (mongoID === scoreArrayID){
       scoreList = response.scoreArray;
+      myObject = Score;
       if (scoreList === undefined){
         scoreList = [];
-        put({"scoreArray" : scoreList }, mongoID);
+        putPlaceholder = {"scoreArray" : scoreList };
       }
+      objectList = scoreList;
     }
-    else if (mongoID === studentArrayID){
+    if (mongoID === studentArrayID){
       studentList = response.studentArray
+      myObject = Student;
       if (studentList === undefined){
         studentList = [];
-        put({"studentArray" : studentList }, mongoID);
+        putPlaceholder = {"studentArray" : studentList };
       }
-      studentList.forEach(function(current, index, array){
-        Object.setPrototypeOf(current, Student.prototype);
-      })
+      objectList = studentList;
     }
-    else if (mongoID === assignmentArrayID){
+    if (mongoID === assignmentArrayID){
       assignmentList = response.assignmentArray;
+      myObject = Assignment;
       if (assignmentList === undefined){
         assignmentList = [];
-        put({"assignmentArray" : assignmentList }, mongoID);
+        putPlaceholder = {  "assignmentArray" : assignmentList };
       }
-      assignmentList.forEach(function(current, index, array){
-        Object.setPrototypeOf(current, Assignment.prototype);
+      objectList = assignmentList;
+    }
+        /********  REUSE THIS FOR EACH GET******/
+    if (objectList[0] === undefined){
+      put(putPlaceholder, mongoID);
+    }
+    if (myObject !== null){
+      console.log("object list", objectList)
+      objectList.forEach(function(current, index, array){
+        Object.setPrototypeOf(current, myObject.prototype);
       })
     }
     checkGetCounter();
@@ -129,7 +149,6 @@ function Assignment(assignmentName, points){
   this.addStudent = function(){  // adds student to studentList
     var studentMatch = false;
     var storedStudentName = this.studentName;
-    var storedStudentObject = this;
     studentList.forEach(function(current, index, array){
       if (current.studentName === storedStudentName) {
         console.log("we got a match for " + storedStudentName );
@@ -137,7 +156,7 @@ function Assignment(assignmentName, points){
       }
     }) // end forEach
     if (!studentMatch) { // if no match, then add to list and update database
-      studentList.unshift(storedStudentObject);
+      studentList.unshift(this);
       put({ "studentArray" : studentList }, studentArrayID);
     }
   }
@@ -146,7 +165,6 @@ function Assignment(assignmentName, points){
 Assignment.prototype.addAssignment = function(){
   var assignmentMatch = false; //first assume the new assignment is NOT in the list already
   var storedAssignmentName = this.assignmentName;
-  var storedAssignmentObject = this;
   assignmentList.forEach(function(current, index, array){ //check to see if assignmet is in list
     if (current.assignmentName === storedAssignmentName) {
       console.log("we got a match for " + storedAssignmentName);
@@ -329,35 +347,47 @@ function editCells(formerStudentText, formerAssignmentText){
 }
 
 function deleteObject(name, type){
-  var found = false, objectName, objectList;
+  var found = false;
 
   if (type === "student"){
     objectName = studentName;
     objectList = studentList;
+    putPlaceholder = {  "studentArray" : studentList };
+    placeholderID = studentArrayID;
   }
   if (type === "assignment"){
     objectName = assignmentName;
     objectList = assignmentList;
+    putPlaceholder = {  "assignmentArray" : assignmentList };
+    placeholderID = assignmentArrayID;
   }
 
   objectList.forEach(function(current, index, array){
     if (current.studentName === name || current.assignmentName === name) {
+      if (type === "assignment") {
+        totalPointsPossible -= current.points;// NO! THAT ONLY WORKS IF EVERYONE HAS THE FULL POINT VALUE! NEED TO GET THIS FROM THE SCORE OBJECT INSTEAD!
+        pointsToRemove = current.points;
+        put({  "totalPoints" : totalPointsPossible }, totalPointsID);
+        //NOW GO THROUGH SCORELIST AND REMOVE ANY SCORES THAT MATCH THIS ASSIGNMENT... ALSO DO THIS WHEN ASSIGNMENTS ARE RENAMED!
+
+        studentList.forEach(function(current, index, array){ // lower every student's score by the same amount tha total points was lowered by
+          current.removePoints();
+        })
+
+        // put({  "scoreArray" : scoreList }, scoreArrayID);
+      }
+      if (type === "student") {
+        // NOW GO THROUGH SCORE LIST AND REMOVE SCORES THAT MATCH THIS STUDENT NAME... ALSO DO THIS WHEN STUDENT NAMES ARE RENAMED!
+
+         // put({  "scoreArray" : scoreList }, scoreArrayID);
+      }
       objectList.splice(index, 1);
       found = true;
+      put(putPlaceholder, placeholderID);
     }
   })
-  if (found){
-    if (type === "student") {
-      put({  "studentArray" : studentList }, studentArrayID);
-    }
-    else if (type === "assignment"){
-      put({  "assignmentArray" : assignmentList }, assignmentArrayID);
-    }
-
-    // put({  "scoreArray" : scoreList }, scoreArrayID);
-    // put({  "totalPoints" : totalPointsPossible }, totalPointsID);
-  }
-  else{  console.log("couldn't find it, so I can't delete it!")
+  if (!found){ // "not found", get it ? Its clever :)
+    console.log("couldn't find it, so I can't delete it!")
   }
 }
 
@@ -370,7 +400,7 @@ function alphabetizeStudents(){
         if (studentList[i+1].studentName < studentList[i].studentName){ //if 2 consecutive students are NOT in alphabetical order then...
           higherAlphabet = studentList[i];  //store the higher value
           lowerAlphabet = studentList[i+1]; //store the lower value
-          studentList[i]= lowerAlphabet;  //swap the two values
+          studentList[i] = lowerAlphabet;  //swap the two values
           studentList[i+1] = higherAlphabet;
           changeCounter ++;
         }
@@ -382,13 +412,28 @@ function alphabetizeStudents(){
   }
 }//end alphabetizeStudents()
 
-function main(){
-  get(totalPointsID);
-  get(studentArrayID);
-  get(assignmentArrayID);
-  get(scoreArrayID);
+$('table').on('click', '.editable',  function(){
+    var storedName, storedAssignment;
+    if ($(this).is('.student')) {
+      storedName = $(this).text();
+      storedAssignment = null;
+    }
+    if ($(this).is('.assignment')){
+      storedName = null;
+      storedAssignment = $(this).attr('id');
+    }
+    if ($(this).is('.score')) {
+      storedName = $(this).siblings(':first').attr('id');
+      storedAssignment =  $(this).attr('id').slice(storedName.length);
+      pointsToRemove  = Number($(this).text());  //subract off the points in the cell FIRST so the score can be lowered to a new value if needed. If the cell is blank then that's ok because Number(emptyString) === 0
+      scoreList.push(new Score(storedName + storedAssignment , 0));
+      put({ "scoreArray" : scoreList }, scoreArrayID);
+    }
+    $(this).addClass('clicked');
+    editCells(storedName, storedAssignment);
+  });
 
-  $('#addStudent').on('click', function(){
+$('#addStudent').on('click', function(){
     if ($('#studentName').val() === '') { //check if text input field is empty
       console.log("Nothing to add! Enter a new student name!");
     }
@@ -430,26 +475,11 @@ function main(){
     }
   });
 
-  $('table').on('click', '.editable',  function(){
-    var storedAssignment, storedName;
-    if ($(this).is('.student')) {
-      storedName = $(this).text();
-      storedAssignment = null;
-    }
-    if ($(this).is('.assignment')){
-      storedName = null;
-      storedAssignment = $(this).attr('id');
-    }
-    if ($(this).is('.score')) {
-      storedName = $(this).siblings(':first').attr('id');
-      storedAssignment =  $(this).attr('id').slice(storedName.length);
-      pointsToRemove  = Number($(this).text());  //subract off the points in the cell FIRST so the score can be lowered to a new value if needed. If the cell is blank then that's ok because Number(emptyString) === 0
-      scoreList.push(new Score(storedName + storedAssignment , 0));
-      put({ "scoreArray" : scoreList }, scoreArrayID);
-    }
-    $(this).addClass('clicked');
-    editCells(storedName, storedAssignment);
-  });
-} //end main()
+(function main(){
+  get(totalPointsID);
+  get(studentArrayID);
+  get(assignmentArrayID);
+  get(scoreArrayID);
+})();
 
-main(); //start the program
+
