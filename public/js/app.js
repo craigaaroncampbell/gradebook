@@ -179,14 +179,20 @@ var main = (function mainIIFE(){
     }) // end forEach
     if (!assignmentMatch) { // if no match for that assignment name, then put the assignment in the list and update points and database
       assignmentList.unshift(this);
+      console.dir(assignmentList)
       totalPointsPossible += this.points
       put({ "assignmentArray" : assignmentList }, ASSIGNMENT_ARRAY_ID);
       put({ "totalPoints" : totalPointsPossible }, TOTAL_POINTS_ID);
       }
   };
 
+
   function properCapitalization(input){
-    return input.slice(0,1).toUpperCase() + input.slice(1).toLowerCase();
+    var re = /(\b[a-z](?!\s))/g; // finds first letter of words, after dashes, and punctuation so that they can be capitalized
+    var noSpace = input.replace(/\s/g, "-" ) //replaces whitespace with dash
+    return noSpace.replace(re, function(x){console.log("BLAAAAAAAH",x); return x.toUpperCase();});
+
+    // return noSpace.slice(0,1).toUpperCase() + noSpace.slice(1).toLowerCase();
   } //makes 1st letter capitalized, and rest lowercase regardless of input capitalization; this will be important for alphabetizing as ASCII numbers for lowercase "a" is actually HIGHER than for uppercase "Z", and my method of comparing compares ASCII values
 
   function renderStudents(){
@@ -329,7 +335,6 @@ var main = (function mainIIFE(){
               current.addPoints(pointsToAdd);
             }
           })
-
           if ($('.clicked').is($('#' + formerStudentText + formerAssignmentText))) {
             scoreList.forEach(function(current, index, array){
               if (current.scoreName === $('.clicked').attr('id')) {
@@ -340,6 +345,7 @@ var main = (function mainIIFE(){
           }
           put({ "scoreArray" : scoreList }, SCORE_ARRAY_ID);
           put({ "studentArray" : studentList }, STUDENT_ARRAY_ID);
+
 
           $('.clicked').attr('class', 'editable score'); //remove the clicked class
         }
@@ -448,6 +454,7 @@ var main = (function mainIIFE(){
         })
         if (!present) {
           scoreList.push(new Score(storedName + storedAssignment));
+          console.log(scoreList)
           put({ "scoreArray" : scoreList }, SCORE_ARRAY_ID);
         }
       }
