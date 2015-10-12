@@ -1,4 +1,4 @@
-'use strict';
+ 'use strict';
 const TOTAL_POINTS_ID = '56005b32e4b0e6c040a24d34';
 const SCORE_ARRAY_ID = '56005b32e4b099d78856fee9';
 const STUDENT_ARRAY_ID = '56005b32e4b0e6c040a24d36';
@@ -360,7 +360,6 @@ var main = (function mainIIFE(){
 
   function deleteObject(name, type){
     var found = false, removedPoints, objectName, placeholderID, putData, dataList;
-
 
     if (type === "student"){
       objectName = studentName;
