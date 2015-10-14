@@ -54,7 +54,7 @@ function renderAssignments(){
       else{
         scoreYet = false;
       }
-      if (scoreYet === false){
+      if (!scoreYet){
           placeholder = '';
           nameOfStudent = myClass.students[j].studentName
           id = nameOfStudent + myClass.assignments[i].assignmentName

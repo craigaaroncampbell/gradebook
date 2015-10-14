@@ -44,9 +44,10 @@ function Student(studentName, score){
     }) // end forEach
     if (!studentMatch) { // if no match, then add to list and update database
       myClass.students.unshift(this);
-      main.students.put({ "studentArray" : myClass.students });
+      mongo.students.put({ "studentArray" : myClass.students });
     }
   }
+
 }).call(Student.prototype);
 
 
@@ -91,8 +92,8 @@ Assignment.prototype.addAssignment = function(){
     myClass.assignments.unshift(this);
     console.dir(myClass.assignments)
     myClass.points += this.points
-    main.assignments.put({ "assignmentArray" : myClass.assignments });
-    main.points.put({ "totalPoints" : myClass.points });
+    mongo.assignments.put({ "assignmentArray" : myClass.assignments });
+    mongo.points.put({ "totalPoints" : myClass.points });
     }
 };
 

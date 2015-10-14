@@ -32,15 +32,15 @@ function editCells(formerStudentText, formerAssignmentText, removeThisManyPoints
             }
           }) //end forEach
         }
-          main.assignments.put({ "assignmentArray" : myClass.assignments });
+          mongo.assignments.put({ "assignmentArray" : myClass.assignments });
 
           myClass.scores.forEach(function(current, index, array){
             if (current.scoreName.slice(-(formerAssignmentText.length)) === formerAssignmentText ){  // if the first part of the scoreName matches the name of the assignment that was JUST changed (the old name not the new one), then replace the first part of scoreName with the NEW name
               current.scoreName = current.scoreName.slice(0, (current.scoreName.length - formerAssignmentText.length)) + editValue;
             }
           })
-          main.scores.put({ "scoreArray" : myClass.scores });
-
+          mongo.scores.put({ "scoreArray" : myClass.scores });
+xs
         $('.clicked').removeClass('clicked'); //remove clicked class
       } // end if assignment
 
@@ -61,14 +61,14 @@ function editCells(formerStudentText, formerAssignmentText, removeThisManyPoints
               myClass.students[index].studentName = editValue; //change the matching student name to the edit value
             }
           }) // end forEach
-          main.students.put({ "studentArray" : myClass.students });
+          mongo.students.put({ "studentArray" : myClass.students });
 
           myClass.scores.forEach(function(current, index, array){
             if (current.scoreName.slice(0, formerStudentText.length) === formerStudentText ){  // if the first part of the scoreName matches the name of the student who was JUST changed (the old name not the new one), then replace the first part of scoreName with the NEW name
               current.scoreName = editValue + current.scoreName.slice(formerStudentText.length)
             }
           })
-          main.scores.put({ "scoreArray" : myClass.scores });
+          mongo.scores.put({ "scoreArray" : myClass.scores });
         }
         $('.clicked').attr('class', 'editable student'); //make the table cell editable again
       } // end if student
@@ -102,8 +102,8 @@ function editCells(formerStudentText, formerAssignmentText, removeThisManyPoints
             }
           })
         }
-        main.scores.put({ "scoreArray" : myClass.scores });
-        main.students.put({ "studentArray" : myClass.students });
+        mongo.scores.put({ "scoreArray" : myClass.scores });
+        mongo.students.put({ "studentArray" : myClass.students });
 
 
         $('.clicked').attr('class', 'editable score'); //remove the clicked class
@@ -144,7 +144,7 @@ $('table').on('click', '.editable',  function(){
       if (!present) {
         myClass.scores.push(new Score(storedName + storedAssignment));
         console.log(myClass.scores)
-        main.scores.put({ "scoreArray" : myClass.scores });
+        mongo.scores.put({ "scoreArray" : myClass.scores });
       }
     }
     $(this).addClass('clicked');
