@@ -67,14 +67,14 @@ function renderAssignments(){
 }
 
 function alphabetizeStudents(){
-  var i, changeCounter;
+  var i, changeCounter, higherAlphabet, lowerAlphabet;
   if (myClass.students.length > 1){
     while (true){
       changeCounter = 0;
       for (i = 0; i < myClass.students.length - 1 ; i++){ // length-1 becasue we do the last comparison on the next-to-last index
         if (myClass.students[i+1].studentName < myClass.students[i].studentName){ //if 2 consecutive students are NOT in alphabetical order then...
-          let higherAlphabet = myClass.students[i];  //store the higher value
-          let lowerAlphabet = myClass.students[i+1]; //store the lower value
+          higherAlphabet = myClass.students[i];  //store the higher value
+          lowerAlphabet = myClass.students[i+1]; //store the lower value
           myClass.students[i] = lowerAlphabet;  //swap the two values
           myClass.students[i+1] = higherAlphabet;
           changeCounter ++;

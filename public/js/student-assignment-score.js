@@ -1,4 +1,4 @@
-'use strict'
+ 'use strict'
 
 /////////////////// Student Object ////////////////////
 
@@ -7,7 +7,7 @@ function Student(studentName, score){
   this.totalScore = score || 0;
 }
 
-(function(){ // add methods to Student.prototype
+~(function(){ // add methods to Student.prototype
   this.addPoints = function(points){
      return this.totalScore += points || 0; // add no points if not specified
 

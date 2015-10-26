@@ -1,17 +1,16 @@
  'use strict';
 
-/////////////  mongo DB ////////////
+///////////// Main  calls to Mongo DB ////////////
 
-var mongo = (function(){
-  var res = [];
-  var database = {
+var main = (function(){
+  var mongo = {
     put:  function put(theData){
       $.ajax({
         url: 'https://api.mongolab.com/api/1/databases/gradebookproject/collections/myData/' + this.mongoID + '?apiKey=Q_MWxLPLxfonVusuXCHtaz6boo4vCKTN',
         data: JSON.stringify( { "$set" : theData }),
         type: "PUT",
         contentType: "application/json",
-        success: console.log('Connected to mongoDB using mongo.' + this.name + '.put()' )
+        success: console.log('Connected to MongoDB using main.' + this.name + '.put()' )
       });
     },
 
@@ -23,40 +22,36 @@ var mongo = (function(){
             contentType: 'application/json',
             dataType: 'json',
             success: function(){
-              console.log('Connected to mongoDB using mongo.' + this.name + '.get()')
+              console.log('Connected to MongoDB using main.' + this.name + '.get()')
             }.bind(this)
 
           })
           .done(function(response){
             this.response = response;
 
-            if (this === mongo.students){
-              res[0] = mongo.students.response;
-              myClass.students = mongo.students.response.studentArray || [];
+            if (this === main.students){
+              myClass.students = main.students.response.studentArray || [];
               myClass.students.forEach(function(current, index, array){
                 Object.setPrototypeOf(current, Student.prototype);
               })
             }
 
-            if (this === mongo.assignments){
-              res[1] = mongo.assignments.response
-              myClass.assignments = mongo.assignments.response.assignmentArray || [];
+            if (this === main.assignments){
+              myClass.assignments = main.assignments.response.assignmentArray || [];
               myClass.assignments.forEach(function(current, index, array){
                 Object.setPrototypeOf(current, Assignment.prototype);
               })
             }
 
-            if (this === mongo.scores){
-              res[2] = mongo.scores.response
-              myClass.scores = mongo.scores.response.scoreArray || [];
+            if (this === main.scores){
+              myClass.scores = main.scores.response.scoreArray || [];
               myClass.scores.forEach(function(current, index, array){
                 Object.setPrototypeOf(current, Score.prototype);
               })
             }
 
-            if (this === mongo.points) {
-              res[3] = mongo.points.response
-              myClass.points = mongo.points.response.totalPoints || 0;
+            if (this === main.points) {
+              myClass.points = main.points.response.totalPoints || 0;
             }
 
             if (myClass.getCounter === undefined) {
@@ -73,28 +68,28 @@ var mongo = (function(){
     }
   }
 
-  var points = Object.create(database, {
+  var points = Object.create(mongo, {
     'name' : { value: 'points' },
     'mongoID' : { value: '56005b32e4b0e6c040a24d34' },
     'response' : { value: null,
                    writable: true }
   });
 
-  var students = Object.create(database, {
+  var students = Object.create(mongo, {
     'name' : { value: 'students' },
     'mongoID' : { value: '56005b32e4b0e6c040a24d36' },
     'response' : { value: null,
                    writable: true }
   });
 
-  var scores = Object.create(database, {
+  var scores = Object.create(mongo, {
     'name' : { value: 'scores' },
     'mongoID' : { value: '56005b32e4b099d78856fee9' },
     'response' : { value: null,
                    writable: true }
   });
 
-  var assignments = Object.create(database, {
+  var assignments = Object.create(mongo, {
     'name' : { value: 'assignments' },
     'mongoID' : { value: '56005b32e4b0e6c040a24d35' },
     'response' : { value: null,
@@ -105,45 +100,37 @@ var mongo = (function(){
 return {points: points,
         students: students,
         scores: scores,
-        assignments: assignments,
-        res: res
+        assignments: assignments
       };
-})(); // end mongo IFEE
+})(); // end main IFEE
 
 !(function(){
-  mongo.students.get();
-  mongo.scores.get();
-  mongo.assignments.get();
-  mongo.points.get();
+  main.students.get();
+  main.scores.get();
+  main.assignments.get();
+  main.points.get();
 })()
 
 
-'use strict';
 ///////////////// myClass Object /////////////////////////
 
-
 var myClass = (function(){
-  var properties = {
+  var classPeriod = {
     getCounter : null,
     assignments : null,
     students : null,
     scores: null,
-    points: function() {
+    pointsPossible: function() {
       var total = 0;
       this.assignments.forEach(function(current, index, array){
         total += current.points
       });
       return total;
     }
-
   }
-  return properties
-})(); // end this module
+  return classPeriod
+})(); // end myclass module
 
-
-
-
- 'use strict'
 
 /////////////////// Student Object ////////////////////
 
@@ -152,7 +139,7 @@ function Student(studentName, score){
   this.totalScore = score || 0;
 }
 
-~(function(){ // add methods to Student.prototype
+(function(){ // add methods to Student.prototype
   this.addPoints = function(points){
      return this.totalScore += points || 0; // add no points if not specified
 
@@ -189,10 +176,9 @@ function Student(studentName, score){
     }) // end forEach
     if (!studentMatch) { // if no match, then add to list and update database
       myClass.students.unshift(this);
-      mongo.students.put({ "studentArray" : myClass.students });
+      main.students.put({ "studentArray" : myClass.students });
     }
   }
-
 }).call(Student.prototype);
 
 
@@ -207,15 +193,6 @@ Score.prototype.updateScore = function(scoreValue){
   return this.score = scoreValue;
 }
 
-$('#addStudent').on('click', function(){
-    if ($('#studentName').val() === '') { //check if text input field is empty
-      console.log("Nothing to add! Enter a new student name!");
-    }
-    else {
-      new Student(properCapitalization($('#studentName').val())).addStudent();
-      renderAll();
-    }
-  });
 
 /////////// Assignment Object//////////////////////
 
@@ -237,27 +214,13 @@ Assignment.prototype.addAssignment = function(){
     myClass.assignments.unshift(this);
     console.dir(myClass.assignments)
     myClass.points += this.points
-    mongo.assignments.put({ "assignmentArray" : myClass.assignments });
-    mongo.points.put({ "totalPoints" : myClass.points });
+    main.assignments.put({ "assignmentArray" : myClass.assignments });
+    main.points.put({ "totalPoints" : myClass.points });
     }
 };
 
-$('#addAssignment').on('click', function(){
-  var pointValue = Number($('#pointValue').val());
-  /*    /^\d+$/  this regex should mean "starting with at least one digit and continuously only having digits until the end"   (so no neatives or decimals or non-numbers)   */
-  if ($('#assignmentName').val() !== '' && /^\d+$/.test(pointValue))  { //check if there is text in the input field and that the point field is actualy digits greater than 0 and it is a whole number
-    new Assignment(properCapitalization($('#assignmentName').val()), pointValue).addAssignment(); //put new assignment in myClass.assignments
-    renderAll();
-  }
-  else {
-    console.log("make sure the fields are not blank and that the points value is a positive whole number")
-  }
-});
-
-
-'use strict';
-
 /////////////////////// Rendering Stuff ////////////////
+
 
 function renderAll(){
   alphabetizeStudents();
@@ -311,7 +274,7 @@ function renderAssignments(){
       else{
         scoreYet = false;
       }
-      if (!scoreYet){
+      if (scoreYet === false){
           placeholder = '';
           nameOfStudent = myClass.students[j].studentName
           id = nameOfStudent + myClass.assignments[i].assignmentName
@@ -323,15 +286,16 @@ function renderAssignments(){
   } // end i loop
 }
 
+
 function alphabetizeStudents(){
-  var i, changeCounter, higherAlphabet, lowerAlphabet;
+  var i, changeCounter;
   if (myClass.students.length > 1){
     while (true){
       changeCounter = 0;
       for (i = 0; i < myClass.students.length - 1 ; i++){ // length-1 becasue we do the last comparison on the next-to-last index
         if (myClass.students[i+1].studentName < myClass.students[i].studentName){ //if 2 consecutive students are NOT in alphabetical order then...
-          higherAlphabet = myClass.students[i];  //store the higher value
-          lowerAlphabet = myClass.students[i+1]; //store the lower value
+          let higherAlphabet = myClass.students[i];  //store the higher value
+          let lowerAlphabet = myClass.students[i+1]; //store the lower value
           myClass.students[i] = lowerAlphabet;  //swap the two values
           myClass.students[i+1] = higherAlphabet;
           changeCounter ++;
@@ -344,8 +308,6 @@ function alphabetizeStudents(){
   }
 }
 
-
-'use strict';
 
 //////////////////// Edit Data ///////////////////////////
 
@@ -379,15 +341,15 @@ function editCells(formerStudentText, formerAssignmentText, removeThisManyPoints
             }
           }) //end forEach
         }
-          mongo.assignments.put({ "assignmentArray" : myClass.assignments });
+          main.assignments.put({ "assignmentArray" : myClass.assignments });
 
           myClass.scores.forEach(function(current, index, array){
             if (current.scoreName.slice(-(formerAssignmentText.length)) === formerAssignmentText ){  // if the first part of the scoreName matches the name of the assignment that was JUST changed (the old name not the new one), then replace the first part of scoreName with the NEW name
               current.scoreName = current.scoreName.slice(0, (current.scoreName.length - formerAssignmentText.length)) + editValue;
             }
           })
-          mongo.scores.put({ "scoreArray" : myClass.scores });
-xs
+          main.scores.put({ "scoreArray" : myClass.scores });
+
         $('.clicked').removeClass('clicked'); //remove clicked class
       } // end if assignment
 
@@ -408,14 +370,14 @@ xs
               myClass.students[index].studentName = editValue; //change the matching student name to the edit value
             }
           }) // end forEach
-          mongo.students.put({ "studentArray" : myClass.students });
+          main.students.put({ "studentArray" : myClass.students });
 
           myClass.scores.forEach(function(current, index, array){
             if (current.scoreName.slice(0, formerStudentText.length) === formerStudentText ){  // if the first part of the scoreName matches the name of the student who was JUST changed (the old name not the new one), then replace the first part of scoreName with the NEW name
               current.scoreName = editValue + current.scoreName.slice(formerStudentText.length)
             }
           })
-          mongo.scores.put({ "scoreArray" : myClass.scores });
+          main.scores.put({ "scoreArray" : myClass.scores });
         }
         $('.clicked').attr('class', 'editable student'); //make the table cell editable again
       } // end if student
@@ -449,8 +411,8 @@ xs
             }
           })
         }
-        mongo.scores.put({ "scoreArray" : myClass.scores });
-        mongo.students.put({ "studentArray" : myClass.students });
+        main.scores.put({ "scoreArray" : myClass.scores });
+        main.students.put({ "studentArray" : myClass.students });
 
 
         $('.clicked').attr('class', 'editable score'); //remove the clicked class
@@ -464,8 +426,50 @@ xs
   }); // end on.blur
 }
 
+///////////////// Delete Data ////////////////////
 
-/////////////// Event Listener //////////////////
+function deleteObject(name, type){
+  var found = false, removedPoints, objectName, placeholderID, putData, dataList;
+
+  if (type === "student"){
+    myClass.students.forEach(function(current, index, array){
+      if (current.studentName === name) {
+        found = true;
+        myClass.students.splice(current, 1);
+      }
+    })
+    main.students.put({  "studentArray" : myClass.students})
+  } // end if student
+
+  if (type === "assignment") {
+    assigmentList.forEach(function(current, index, array){
+      if (current.assignmentName === name) {
+        found = true;
+        myClass.assignments.splice(current, 1);
+
+
+        myClass.points -= current.points;// NO! THAT ONLY WORKS IF EVERYONE HAS THE FULL POINT VALUE! NEED TO GET THIS FROM THE SCORE OBJECT INSTEAD!
+        removedPoints = current.points;
+        myClass.assignments.splice(current, 1);
+        main.points.put({  "totalPoints" : myClass.points });
+        main.assignments.put({  "assignmentArray" : myClass.assignments})
+
+        myClass.students.forEach(function(current, index, array){ // lower every student's score by the same amount tha total points was lowered by
+          current.removePoints(removedPoints);
+        })
+        main.students.put({  "studentArray" : myClass.students})
+
+      }// end  if currrent.assignmentName  = name
+    }) // end myClass.assignments.forEach()
+  } // end if assignment
+  if (!found){ // "not found", get it ? Its clever :)
+    console.log("couldn't find it, so I can't delete it!")
+  }
+}// end deleteObject()
+
+
+
+/////////////// Event Listeners //////////////////
 
 $('table').on('click', '.editable',  function(){
     var storedName, storedAssignment, pointsToRemove, present = false;
@@ -491,59 +495,34 @@ $('table').on('click', '.editable',  function(){
       if (!present) {
         myClass.scores.push(new Score(storedName + storedAssignment));
         console.log(myClass.scores)
-        mongo.scores.put({ "scoreArray" : myClass.scores });
+        main.scores.put({ "scoreArray" : myClass.scores });
       }
     }
     $(this).addClass('clicked');
     editCells(storedName, storedAssignment, pointsToRemove);
   });
 
+$('#addStudent').on('click', function(){
+    if ($('#studentName').val() === '') { //check if text input field is empty
+      console.log("Nothing to add! Enter a new student name!");
+    }
+    else {
+      new Student(properCapitalization($('#studentName').val())).addStudent();
+      renderAll();
+    }
+  });
 
-
-
-
-'use strict';
-
-//////////////// Delete Data ////////////////////
-
-function deleteObject(name, type){
-  var found = false, removedPoints;
-
-  if (type === "student"){
-    myClass.students.forEach(function(current, index, array){
-      if (current.studentName === name) {
-        found = true;
-        myClass.students.splice(current, 1);
-      }
-    })
-    mongo.students.put({  "studentArray" : myClass.students})
+$('#addAssignment').on('click', function(){
+  var pointValue = Number($('#pointValue').val());
+  /*    /^\d+$/  this regex should mean "starting with at least one digit and continuously only having digits until the end"   (so no neatives or decimals or non-numbers)   */
+  if ($('#assignmentName').val() !== '' && /^\d+$/.test(pointValue))  { //check if there is text in the input field and that the point field is actualy digits greater than 0 and it is a whole number
+    new Assignment(properCapitalization($('#assignmentName').val()), pointValue).addAssignment(); //put new assignment in myClass.assignments
+    renderAll();
   }
-
-  if (type === "assignment") {
-    myClass.assignments.forEach(function(current, index, array){
-      if (current.assignmentName === name) {
-        found = true;
-
-        myClass.points -= current.points; //BUT this works properly ONLY IF all students have the full amount of points for that deleted assigment!
-
-        removedPoints = current.points;
-        myClass.assignments.splice(current, 1);
-        mongo.points.put({  "totalPoints" : myClass.points });
-        mongo.assignments.put({  "assignmentArray" : myClass.assignments})
-
-        myClass.students.forEach(function(current, index, array){ // lower every student's score by the same amount tha total points was lowered by
-          current.removePoints(removedPoints);
-        })
-        mongo.students.put({  "studentArray" : myClass.students})
-
-      }// end  if currrent.assignmentName  = name
-    }) // end myClass.assignments.forEach()
-  } // end if assignment
-  if (!found){ // "not found", get it ? Its clever :)
-    console.log("couldn't find it, so I can't delete it!")
+  else {
+    console.log("make sure the fields are not blank and that the points value is a positive whole number")
   }
-}// end deleteObject()
-
+});
 
 $('#deleteStudent').on('click', function(){
   if ($('#deleteStudentName').val() === '') { //check if there is text in the input field
@@ -564,3 +543,4 @@ $('#deleteAssignment').on('click', function(){
    renderAll();
   }
 });
+

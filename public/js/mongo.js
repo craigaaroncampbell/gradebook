@@ -3,6 +3,7 @@
 /////////////  mongo DB ////////////
 
 var mongo = (function(){
+  var res = [];
   var database = {
     put:  function put(theData){
       $.ajax({
@@ -30,6 +31,7 @@ var mongo = (function(){
             this.response = response;
 
             if (this === mongo.students){
+              res[0] = mongo.students.response;
               myClass.students = mongo.students.response.studentArray || [];
               myClass.students.forEach(function(current, index, array){
                 Object.setPrototypeOf(current, Student.prototype);
@@ -37,6 +39,7 @@ var mongo = (function(){
             }
 
             if (this === mongo.assignments){
+              res[1] = mongo.assignments.response
               myClass.assignments = mongo.assignments.response.assignmentArray || [];
               myClass.assignments.forEach(function(current, index, array){
                 Object.setPrototypeOf(current, Assignment.prototype);
@@ -44,6 +47,7 @@ var mongo = (function(){
             }
 
             if (this === mongo.scores){
+              res[2] = mongo.scores.response
               myClass.scores = mongo.scores.response.scoreArray || [];
               myClass.scores.forEach(function(current, index, array){
                 Object.setPrototypeOf(current, Score.prototype);
@@ -51,6 +55,7 @@ var mongo = (function(){
             }
 
             if (this === mongo.points) {
+              res[3] = mongo.points.response
               myClass.points = mongo.points.response.totalPoints || 0;
             }
 
@@ -100,7 +105,8 @@ var mongo = (function(){
 return {points: points,
         students: students,
         scores: scores,
-        assignments: assignments
+        assignments: assignments,
+        res: res
       };
 })(); // end mongo IFEE
 
