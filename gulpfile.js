@@ -8,15 +8,15 @@ var rename = require('gulp-rename');
 gulp.task('concatJS', function(){
   gulp.src(['public/js/mongo.js', 'public/js/myclass.js', 'public/js/student-assignment-score.js', 'public/js/rendering.js', 'public/js/editing.js', 'public/js/delete.js'])
   .pipe(concat('app.js'))
-  .pipe(gulp.dest('public'));
+  .pipe(gulp.dest('public/js'));
 });
 
 gulp.task('minifyJS', function(){
-  gulp.src('public/app.js')
+  gulp.src('public/js/app.js')
   .pipe(uglify())
   .pipe(rename('app.min.js'))
-  .pipe(gulp.dest('public'));
+  .pipe(gulp.dest('public/js'));
 
 });
 
-gulp.task('default', ['concatJS']);
+gulp.task('default', ['concatJS', 'concatJS']);
