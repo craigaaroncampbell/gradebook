@@ -1,11 +1,8 @@
 {
   "name": "gradebook",
   "version": "1.0.0",
-  "description": "",
+  "description": "an online gradebook that I did as a project to get into the JS DA",
   "main": "gradebook-server.js",
-  "dependencies": {
-    "mongodb": "^2.0.43"
-  },
   "devDependencies": {
     "gulp-concat": "^2.6.0",
     "gulp-rename": "^1.2.2",
@@ -23,6 +20,9 @@
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/craigcampbell8/gradebook/issues"
+  },
+  "engines": {
+    "node": "0.12.7"
   },
   "homepage": "https://github.com/craigcampbell8/gradebook#readme"
 }
