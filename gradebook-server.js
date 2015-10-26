@@ -3,8 +3,8 @@ var http = require('http');
 var fs = require('fs');
 var path = require('path');
 
-var port = 5000;
-var hostUrl = '127.0.0.1';
+// var port = 5000;
+// var hostUrl = '127.0.0.1';
 
 function getContentType(req){
   var extname = path.extname(req.url);
@@ -34,8 +34,14 @@ var svr = http.createServer(function(req, res){
     res.writeHead(200, {'Content-Type': getContentType(req)})
     res.end(data, 'utf-8');
   })
-}).listen(port, hostUrl, function() {
-  console.log('server is listening @ ' + hostUrl + ':' + port);
-});
+})
+
+.listen(5000);
+
+
+
+// .listen(port, hostUrl, function() {
+  // console.log('server is listening @ ' + hostUrl + ':' + port);
+// });
 
 
