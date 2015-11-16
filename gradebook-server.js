@@ -36,7 +36,7 @@ var svr = http.createServer(function(req, res){
   })
 })
 
-.listen(5000);
+.listen(process.env.PORT || 5000);
 
 
 
